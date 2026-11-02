@@ -28,7 +28,8 @@ export const ChangeHistory: React.FC = () => {
       h.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (h.reason && h.reason.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesType = typeFilter === 'all' || h.entityType === typeFilter;
-    return matchesSearch && matchesType;
+    const matchesAction = actionFilter === 'all' || h.action === actionFilter;
+    return matchesSearch && matchesType && matchesAction;
   });
 
   const handleExportCSV = () => {

@@ -4,11 +4,12 @@ import { Bus, BusDocument, BusStatus } from '../types';
 import { formatDate, formatINR, exportToCSV } from '../utils/formatters';
 import { 
   Truck, Search, Plus, Download, Edit, ShieldAlert, 
-  CheckCircle2, Clock, Wrench, AlertTriangle, Eye, History, X, Filter, RotateCcw 
+  CheckCircle2, Clock, Wrench, AlertTriangle, Eye, History, X, Filter, RotateCcw, Trash2
 } from 'lucide-react';
+import { WarningModal } from '../components/modals/WarningModal';
 
 export const Fleet: React.FC = () => {
-  const { buses, updateBus, openHistory, showToast } = useApp();
+  const { buses, updateBus, deleteBus, openHistory, showToast } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -16,6 +17,7 @@ export const Fleet: React.FC = () => {
   const [complianceFilter, setComplianceFilter] = useState<'all' | 'expired' | 'expiring' | 'valid'>('all');
   const [selectedBus, setSelectedBus] = useState<Bus | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [deleteModalBus, setDeleteModalBus] = useState<Bus | null>(null);
   const [editingBus, setEditingBus] = useState<Bus | null>(null);
 
   const [editStatus, setEditStatus] = useState<BusStatus>('Available');
@@ -41,8 +43,23 @@ export const Fleet: React.FC = () => {
       b.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.type.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || b.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesType = busTypeFilter === 'all' || b.type === busTypeFilter;
+    const matchesCompliance = 
+      complianceFilter === 'all' ? true :
+      complianceFilter === 'expired' ? b.documents.some((d) => d.status === 'expired') :
+      complianceFilter === 'expiring' ? b.documents.some((d) => d.status === 'expiring') :
+      b.documents.every((d) => d.status === 'valid');
+    return matchesSearch && matchesStatus && matchesType && matchesCompliance;
   });
+
+    const handleConfirmDelete = () => {
+    if (!deleteModalBus) return;
+    deleteBus(deleteModalBus.id);
+    if (selectedBus?.id === deleteModalBus.id) {
+      setSelectedBus(null);
+    }
+    setDeleteModalBus(null);
+  };
 
   const handleOpenEdit = (bus: Bus) => {
     setEditingBus(bus);

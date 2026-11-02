@@ -5,7 +5,7 @@ import { formatINR, formatDate, formatDateTime, exportToCSV, checkDateOverlap, T
 import { 
   BusFront, Plus, Search, Filter, Download, AlertCircle, 
   CheckCircle, Clock, ShieldAlert, ArrowRight, Printer, 
-  MessageSquare, User, Calendar, MapPin, X, Edit, Eye, History, RotateCcw
+  MessageSquare, User, Calendar, MapPin, X, Edit, Eye, History, RotateCcw, Trash2
 } from 'lucide-react';
 import { WarningModal } from '../components/modals/WarningModal';
 
@@ -18,6 +18,7 @@ export const CharterBookings: React.FC = () => {
     addCharterBooking, 
     updateCharterBooking, 
     cancelCharterBooking,
+    deleteCharterBooking,
     openHistory, 
     sendMockSms, 
     showToast 
@@ -39,6 +40,7 @@ export const CharterBookings: React.FC = () => {
   const [warningModalOpen, setWarningModalOpen] = useState(false);
   const [pendingEditBooking, setPendingEditBooking] = useState<CharterBooking | null>(null);
   const [previewBooking, setPreviewBooking] = useState<CharterBooking | null>(null);
+  const [deleteModalBooking, setDeleteModalBooking] = useState<CharterBooking | null>(null);
 
   // Form State
   const initialForm = {
@@ -136,6 +138,12 @@ export const CharterBookings: React.FC = () => {
     busFilter !== 'all' || 
     driverFilter !== 'all' || 
     paymentFilter !== 'all';
+
+    const handleConfirmDelete = () => {
+    if (!deleteModalBooking) return;
+    deleteCharterBooking(deleteModalBooking.id);
+    setDeleteModalBooking(null);
+  };
 
   const handleResetFilters = () => {
     setSearchQuery('');

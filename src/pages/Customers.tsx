@@ -4,8 +4,10 @@ import { Customer } from '../types';
 import { formatINR, formatDate, exportToCSV, INDIAN_STATES } from '../utils/formatters';
 import { 
   Users, Search, Plus, Download, Edit, Phone, MapPin, 
-  Clock, ArrowRight, Eye, History, X, CheckCircle, AlertCircle, Filter, RotateCcw
+  Clock, ArrowRight, Eye, History, X, CheckCircle, AlertCircle, Filter, RotateCcw,
+  Trash2, CreditCard, ArrowDownLeft, Receipt
 } from 'lucide-react';
+import { WarningModal } from '../components/modals/WarningModal';
 
 export const Customers: React.FC = () => {
   const { 
@@ -14,6 +16,8 @@ export const Customers: React.FC = () => {
     payments, 
     addCustomer, 
     updateCustomer, 
+    deleteCustomer,
+    addPayment,
     openHistory, 
     showToast 
   } = useApp();
@@ -22,6 +26,15 @@ export const Customers: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCust, setEditingCust] = useState<Customer | null>(null);
+  // Delete Customer state
+  const [deleteTargetCustomer, setDeleteTargetCustomer] = useState<Customer | null>(null);
+
+  // Quick Payment modal state from Customer Ledger
+  const [quickPayOpen, setQuickPayOpen] = useState(false);
+  const [quickPayAmount, setQuickPayAmount] = useState(15000);
+  const [quickPayMode, setQuickPayMode] = useState<'UPI' | 'Bank' | 'Cash' | 'Card'>('UPI');
+  const [quickPayRef, setQuickPayRef] = useState('UPI/20261102/DPKRAJ');
+  const [quickPayNotes, setQuickPayNotes] = useState('Balance clearance payment');
   const [stateFilter, setStateFilter] = useState<string>('all');
   const [taxTypeFilter, setTaxTypeFilter] = useState<'all' | 'b2b' | 'b2c'>('all');
   const [balanceFilter, setBalanceFilter] = useState<'all' | 'hasDue' | 'zeroDue'>('all');
@@ -105,6 +118,34 @@ export const Customers: React.FC = () => {
     }
     setIsModalOpen(false);
     setEditingCust(null);
+  };
+
+    const handleConfirmDelete = () => {
+    if (!deleteTargetCustomer) return;
+    deleteCustomer(deleteTargetCustomer.id);
+    if (selectedCustomer?.id === deleteTargetCustomer.id) {
+      setSelectedCustomer(null);
+    }
+    setDeleteTargetCustomer(null);
+  };
+
+  const handleQuickPaymentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCustomer) return;
+    addPayment({
+      date: '2026-11-02',
+      amount: Number(quickPayAmount),
+      type: 'credit',
+      mode: quickPayMode,
+      referenceUtr: quickPayRef,
+      customerId: selectedCustomer.id,
+      customerName: selectedCustomer.name,
+      category: 'Charter Balance',
+      linkedId: '',
+      linkedType: 'charter',
+      notes: quickPayNotes,
+    });
+    setQuickPayOpen(false);
   };
 
   const handleExportCSV = () => {

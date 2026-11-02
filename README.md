@@ -76,6 +76,6 @@ Click **"Start Guided Demo"** on the dashboard or top navbar to launch the inter
 ## 📋 Architectural Assumptions Noted
 
 - **Date Anchor**: Fixed to **2 November 2026** so today's departures, tomorrow's school charter, and 3-day EMI auto-debit alerts display authentically.
-- **DLT Gateway**: Mock transactional SMS gateway integrated with Jio/TRAI registered Header `BALAJI`.
+- **DLT Gateway**: Mock transactional SMS gateway integrated with Jio/TRAI registered Header `DPKRAJ`.
 - **GST Rate**: Configured at statutory 5% for passenger transport services under SAC code `9964`.
 

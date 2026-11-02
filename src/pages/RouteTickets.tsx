@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { RouteTicket, PassengerDetail } from '../types';
+import { RouteTicket, PassengerDetail, Route, RouteStop } from '../types';
 import { formatINR, formatDate, exportToCSV, TODAY_STR, TOMORROW_STR, isDateInFilter, DateFilterOption } from '../utils/formatters';
 import { 
   Ticket, Plus, Search, Filter, Download, User, Printer, 
   Share2, Ban, CheckCircle2, QrCode, FileText, X, AlertTriangle, 
-  MapPin, Eye, ArrowRight, ShieldCheck, Bus, RotateCcw, Calendar
+  MapPin, Eye, ArrowRight, ShieldCheck, Bus, RotateCcw, Calendar,
+  History, Edit, Trash2, Clock, Navigation
 } from 'lucide-react';
 import { WarningModal } from '../components/modals/WarningModal';
 
@@ -15,15 +16,19 @@ export const RouteTickets: React.FC = () => {
     routes, 
     buses, 
     addRouteTicket, 
+    updateRouteTicket,
+    deleteRouteTicket,
     cancelRouteTicket, 
+    addRoute,
+    updateRoute,
     openTicketModal, 
-    openInvoiceModal,
-    gstInvoices,
+    openHistory,
     sendMockSms, 
     showToast 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'tickets' | 'booking' | 'manifest'>('tickets');
+  const [activeTab, setActiveTab] = useState<'tickets' | 'booking' | 'routes' | 'manifest'>('tickets');
+  const [layoutVariant, setLayoutVariant] = useState<'sleeper' | 'seater'>('sleeper');
   const [searchQuery, setSearchQuery] = useState('');
   const [routeFilter, setRouteFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -35,6 +40,29 @@ export const RouteTickets: React.FC = () => {
   // Cancel Ticket Confirmation modal state
   const [cancelModalTicket, setCancelModalTicket] = useState<RouteTicket | null>(null);
   const [cancellationReason, setCancellationReason] = useState('Customer family emergency');
+
+  // Delete Ticket modal state
+  const [deleteTicketTarget, setDeleteTicketTarget] = useState<RouteTicket | null>(null);
+
+  // Edit Ticket Modal State with Warning
+  const [pendingEditTicket, setPendingEditTicket] = useState<RouteTicket | null>(null);
+  const [showEditWarning, setShowEditWarning] = useState(false);
+  const [editTicketModalOpen, setEditTicketModalOpen] = useState(false);
+  const [editCustomerName, setEditCustomerName] = useState('');
+  const [editCustomerPhone, setEditCustomerPhone] = useState('');
+  const [editPassengers, setEditPassengers] = useState<PassengerDetail[]>([]);
+  const [editAuditReason, setEditAuditReason] = useState('Passenger spelling correction');
+
+  // Route Master Modal State
+  const [routeModalOpen, setRouteModalOpen] = useState(false);
+  const [editingRoute, setEditingRoute] = useState<Route | null>(null);
+  const [routeNameInput, setRouteNameInput] = useState('');
+  const [originInput, setOriginInput] = useState('');
+  const [destInput, setDestInput] = useState('');
+  const [distanceKmInput, setDistanceKmInput] = useState(1150);
+  const [depTimeInput, setDepTimeInput] = useState('17:30');
+  const [arrTimeInput, setArrTimeInput] = useState('11:00');
+  const [baseFareInput, setBaseFareInput] = useState(1650);
 
   // Interactive Booking Form state
   const [selectedRouteId, setSelectedRouteId] = useState('route-1');
@@ -63,7 +91,7 @@ export const RouteTickets: React.FC = () => {
     .flatMap((t) => t.passengers.map((p) => p.seatNumber));
 
   // Ladies seats pre-allocated (for safety display)
-  const ladiesSeats = ['L3', 'L4', 'U3', 'U4'];
+  const ladiesSeats = ['L3', 'L4', 'U3', 'U4', 'S5', 'S6', 'S9', 'S10'];
 
   // Toggle seat selection
   const handleSeatClick = (seatNum: string) => {
@@ -85,7 +113,7 @@ export const RouteTickets: React.FC = () => {
           gender: ladiesSeats.includes(seatNum) ? 'F' : 'M',
           boardingStop: currentRoute.stops[0].name,
           droppingStop: currentRoute.stops[currentRoute.stops.length - 1].name,
-          idProof: 'Aadhaar / Voter ID',
+          idProof: 'Aadhaar Card',
         },
       });
     }
@@ -129,7 +157,7 @@ export const RouteTickets: React.FC = () => {
         boardingStop: p?.boardingStop || currentRoute.stops[0].name,
         droppingStop: p?.droppingStop || currentRoute.stops[currentRoute.stops.length - 1].name,
         fare,
-        idProof: p?.idProof,
+        idProof: p?.idProof || 'Aadhaar / Voter ID',
       };
     });
 
@@ -164,6 +192,96 @@ export const RouteTickets: React.FC = () => {
     setCancelModalTicket(null);
   };
 
+  // Edit Ticket Initiator (Shows warning modal if confirmed)
+  const handleStartEditTicket = (ticket: RouteTicket) => {
+    setPendingEditTicket(ticket);
+    setEditCustomerName(ticket.customerName);
+    setEditCustomerPhone(ticket.customerPhone);
+    setEditPassengers(JSON.parse(JSON.stringify(ticket.passengers)));
+    if (ticket.status === 'Confirmed') {
+      setShowEditWarning(true);
+    } else {
+      setEditTicketModalOpen(true);
+    }
+  };
+
+  const handleProceedWithTicketEdit = () => {
+    setShowEditWarning(false);
+    setEditTicketModalOpen(true);
+  };
+
+  const handleSaveTicketEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pendingEditTicket) return;
+    updateRouteTicket(pendingEditTicket.id, {
+      customerName: editCustomerName,
+      customerPhone: editCustomerPhone,
+      passengers: editPassengers,
+    }, editAuditReason);
+    setEditTicketModalOpen(false);
+    setPendingEditTicket(null);
+  };
+
+  // Route Master handlers
+  const handleOpenAddRoute = () => {
+    setEditingRoute(null);
+    setRouteNameInput('Delhi ↔ Gorakhpur - Deoria Express');
+    setOriginInput('ISBT Kashmiri Gate, Delhi');
+    setDestInput('Deoria Bus Stand, UP');
+    setDistanceKmInput(840);
+    setDepTimeInput('19:00');
+    setArrTimeInput('09:30');
+    setBaseFareInput(1350);
+    setRouteModalOpen(true);
+  };
+
+  const handleOpenEditRoute = (route: Route) => {
+    setEditingRoute(route);
+    setRouteNameInput(route.name);
+    setOriginInput(route.origin);
+    setDestInput(route.destination);
+    setDistanceKmInput(route.distanceKm);
+    setDepTimeInput(route.departureTime);
+    setArrTimeInput(route.arrivalTime);
+    setBaseFareInput(route.baseFare);
+    setRouteModalOpen(true);
+  };
+
+  const handleSaveRoute = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingRoute) {
+      updateRoute(editingRoute.id, {
+        name: routeNameInput,
+        origin: originInput,
+        destination: destInput,
+        distanceKm: Number(distanceKmInput),
+        departureTime: depTimeInput,
+        arrivalTime: arrTimeInput,
+        baseFare: Number(baseFareInput),
+      });
+    } else {
+      const newRoute: Route = {
+        id: `route-${Date.now()}`,
+        name: routeNameInput,
+        origin: originInput,
+        destination: destInput,
+        distanceKm: Number(distanceKmInput),
+        departureTime: depTimeInput,
+        arrivalTime: arrTimeInput,
+        baseFare: Number(baseFareInput),
+        busType: 'AC Sleeper',
+        stops: [
+          { name: originInput, distanceKm: 0, fareMultiplier: 1.0, arrivalTimeOffset: '+0h' },
+          { name: 'Lucknow Expressway Plaza', distanceKm: 500, fareMultiplier: 0.8, arrivalTimeOffset: '+6h' },
+          { name: 'Gorakhpur Railway Bus Stand', distanceKm: 780, fareMultiplier: 0.95, arrivalTimeOffset: '+11h' },
+          { name: destInput, distanceKm: Number(distanceKmInput), fareMultiplier: 1.0, arrivalTimeOffset: '+14h' },
+        ],
+      };
+      addRoute(newRoute);
+    }
+    setRouteModalOpen(false);
+  };
+
   // Filtered Tickets
   const isTicketFilterActive = 
     searchQuery !== '' || 
@@ -190,7 +308,9 @@ export const RouteTickets: React.FC = () => {
       t.passengers.some((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesRoute = routeFilter === 'all' || t.routeId === routeFilter;
     const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
-    return matchesSearch && matchesRoute && matchesStatus;
+    const matchesBus = busFilter === 'all' || t.busId === busFilter;
+    const matchesDate = isDateInFilter(t.travelDate, dateFilter, customStart, customEnd);
+    return matchesSearch && matchesRoute && matchesStatus && matchesBus && matchesDate;
   });
 
   const handleExportCSV = () => {
@@ -219,19 +339,19 @@ export const RouteTickets: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              Route Ticketing (Inter-State)
+              Route Ticketing & Route Master
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 border border-amber-500/20">
-              Delhi ↔ Bihar & Siliguri
+              Inter-State Services
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Seat layouts (Sleeper 2+1 & Seater), dynamic intermediate stop fare computation, cancellation refund rules & trip manifests.
+            Delhi ↔ Bihar & Siliguri • Sleeper & Seater Coach Layouts • Route Master & Dynamic En-Route Fares • Trip Manifest.
           </p>
         </div>
 
         {/* Tab Switcher & New Ticket Button */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="bg-slate-100 p-1 rounded-xl flex items-center text-xs font-bold">
             <button
               onClick={() => setActiveTab('tickets')}
@@ -250,6 +370,14 @@ export const RouteTickets: React.FC = () => {
               + Sell Tickets
             </button>
             <button
+              onClick={() => setActiveTab('routes')}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${
+                activeTab === 'routes' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              Route Master ({routes.length})
+            </button>
+            <button
               onClick={() => setActiveTab('manifest')}
               className={`px-3 py-1.5 rounded-lg transition-colors ${
                 activeTab === 'manifest' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
@@ -266,6 +394,16 @@ export const RouteTickets: React.FC = () => {
             >
               <Download className="w-4 h-4 text-slate-500" />
               <span>Export CSV</span>
+            </button>
+          )}
+
+          {activeTab === 'routes' && (
+            <button
+              onClick={handleOpenAddRoute}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Add Route</span>
             </button>
           )}
         </div>
@@ -468,6 +606,24 @@ export const RouteTickets: React.FC = () => {
                       {/* Actions */}
                       <td className="p-3.5 align-top text-right">
                         <div className="flex items-center justify-end gap-1">
+                          {/* History Drawer */}
+                          <button
+                            onClick={() => openHistory('Route Ticket', tk.id, `${tk.ticketNumber} (${tk.customerName})`)}
+                            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500"
+                            title="Audit Change History"
+                          >
+                            <History className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Edit Ticket (With Confirmed Warning) */}
+                          <button
+                            onClick={() => handleStartEditTicket(tk)}
+                            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-amber-600 hover:text-amber-700"
+                            title="Edit Ticket Details"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+
                           {/* Print / View Ticket */}
                           <button
                             onClick={() => openTicketModal(tk)}
@@ -505,6 +661,15 @@ export const RouteTickets: React.FC = () => {
                               <Ban className="w-3.5 h-3.5" />
                             </button>
                           )}
+
+                          {/* Delete Ticket Confirmation */}
+                          <button
+                            onClick={() => setDeleteTicketTarget(tk)}
+                            className="p-1.5 rounded-lg border border-slate-200 hover:bg-rose-50 text-slate-400 hover:text-rose-600"
+                            title="Delete Ticket Record"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -531,7 +696,29 @@ export const RouteTickets: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Sleeper vs Seater Layout Switcher */}
+                <div className="flex bg-slate-100 p-0.5 rounded-lg text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => { setLayoutVariant('sleeper'); setSelectedSeats([]); }}
+                    className={`px-2.5 py-1 rounded-md transition-all ${
+                      layoutVariant === 'sleeper' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-600'
+                    }`}
+                  >
+                    🛌 2+1 Sleeper
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setLayoutVariant('seater'); setSelectedSeats([]); }}
+                    className={`px-2.5 py-1 rounded-md transition-all ${
+                      layoutVariant === 'seater' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-600'
+                    }`}
+                  >
+                    💺 2+2 Seater
+                  </button>
+                </div>
+
                 <select
                   value={selectedRouteId}
                   onChange={(e) => {
@@ -569,7 +756,7 @@ export const RouteTickets: React.FC = () => {
                 <span className="w-4 h-4 rounded bg-slate-300 border-2 border-slate-400" /> Booked
               </span>
               <span className="flex items-center gap-1.5 font-medium text-pink-700">
-                <span className="w-4 h-4 rounded bg-pink-100 border-2 border-pink-400" /> Ladies Seat
+                <span className="w-4 h-4 rounded bg-pink-100 border-2 border-pink-400" /> Ladies Reserved
               </span>
             </div>
 
@@ -586,16 +773,96 @@ export const RouteTickets: React.FC = () => {
                 <span className="font-mono text-emerald-400">ENTRY GATE →</span>
               </div>
 
-              {/* Berth Deck Split (Lower & Upper Berths) */}
-              <div className="space-y-6">
-                {/* LOWER DECK (L1 - L18) */}
+              {/* VARIANT 1: SLEEPER LAYOUT */}
+              {layoutVariant === 'sleeper' && (
+                <div className="space-y-6">
+                  {/* LOWER DECK (L1 - L12) */}
+                  <div>
+                    <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider block mb-2">
+                      Lower Deck (Sleeper Berths 2+1)
+                    </span>
+                    <div className="grid grid-cols-6 gap-2">
+                      {Array.from({ length: 12 }, (_, i) => {
+                        const seatNum = `L${i + 1}`;
+                        const isBooked = bookedSeatNumbers.includes(seatNum);
+                        const isSelected = selectedSeats.includes(seatNum);
+                        const isLadies = ladiesSeats.includes(seatNum);
+
+                        return (
+                          <button
+                            key={seatNum}
+                            type="button"
+                            disabled={isBooked}
+                            onClick={() => handleSeatClick(seatNum)}
+                            className={`p-2 rounded-xl text-center font-mono font-bold transition-all shadow-sm ${
+                              isBooked
+                                ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                                : isSelected
+                                ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-300 scale-105'
+                                : isLadies
+                                ? 'bg-pink-950/70 border-2 border-pink-500 text-pink-200 hover:bg-pink-900'
+                                : 'bg-slate-800 border-2 border-slate-600 text-slate-200 hover:border-amber-400 hover:text-white'
+                            }`}
+                          >
+                            <div className="text-xs">{seatNum}</div>
+                            <div className="text-[9px] font-normal opacity-80">
+                              {isBooked ? 'SOLD' : isSelected ? 'PICK' : isLadies ? 'LADIES' : '₹' + currentRoute.baseFare}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* UPPER DECK (U1 - U12) */}
+                  <div>
+                    <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider block mb-2">
+                      Upper Deck (Sleeper Berths 2+1)
+                    </span>
+                    <div className="grid grid-cols-6 gap-2">
+                      {Array.from({ length: 12 }, (_, i) => {
+                        const seatNum = `U${i + 1}`;
+                        const isBooked = bookedSeatNumbers.includes(seatNum);
+                        const isSelected = selectedSeats.includes(seatNum);
+                        const isLadies = ladiesSeats.includes(seatNum);
+
+                        return (
+                          <button
+                            key={seatNum}
+                            type="button"
+                            disabled={isBooked}
+                            onClick={() => handleSeatClick(seatNum)}
+                            className={`p-2 rounded-xl text-center font-mono font-bold transition-all shadow-sm ${
+                              isBooked
+                                ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                                : isSelected
+                                ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-300 scale-105'
+                                : isLadies
+                                ? 'bg-pink-950/70 border-2 border-pink-500 text-pink-200 hover:bg-pink-900'
+                                : 'bg-slate-800 border-2 border-slate-600 text-slate-200 hover:border-amber-400 hover:text-white'
+                            }`}
+                          >
+                            <div className="text-xs">{seatNum}</div>
+                            <div className="text-[9px] font-normal opacity-80">
+                              {isBooked ? 'SOLD' : isSelected ? 'PICK' : isLadies ? 'LADIES' : '₹' + currentRoute.baseFare}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* VARIANT 2: SEATER LAYOUT (2+2 Push Back) */}
+              {layoutVariant === 'seater' && (
                 <div>
                   <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider block mb-2">
-                    Lower Deck (Sleeper Berths 2+1)
+                    Luxury Push-Back Seater Deck (2+2 Configuration • 32 Seats)
                   </span>
-                  <div className="grid grid-cols-6 gap-2">
-                    {Array.from({ length: 12 }, (_, i) => {
-                      const seatNum = `L${i + 1}`;
+                  <div className="grid grid-cols-4 gap-2.5 max-w-md mx-auto">
+                    {Array.from({ length: 28 }, (_, i) => {
+                      const seatNum = `S${i + 1}`;
                       const isBooked = bookedSeatNumbers.includes(seatNum);
                       const isSelected = selectedSeats.includes(seatNum);
                       const isLadies = ladiesSeats.includes(seatNum);
@@ -606,7 +873,7 @@ export const RouteTickets: React.FC = () => {
                           type="button"
                           disabled={isBooked}
                           onClick={() => handleSeatClick(seatNum)}
-                          className={`p-2 rounded-xl text-center font-mono font-bold transition-all shadow-sm ${
+                          className={`p-2.5 rounded-xl text-center font-mono font-bold transition-all shadow-sm ${
                             isBooked
                               ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
                               : isSelected
@@ -618,52 +885,14 @@ export const RouteTickets: React.FC = () => {
                         >
                           <div className="text-xs">{seatNum}</div>
                           <div className="text-[9px] font-normal opacity-80">
-                            {isBooked ? 'SOLD' : isSelected ? 'PICK' : isLadies ? 'LADIES' : '₹' + currentRoute.baseFare}
+                            {isBooked ? 'SOLD' : isSelected ? 'PICK' : isLadies ? 'LADIES' : '₹' + Math.round(currentRoute.baseFare * 0.85)}
                           </div>
                         </button>
                       );
                     })}
                   </div>
                 </div>
-
-                {/* UPPER DECK (U1 - U12) */}
-                <div>
-                  <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider block mb-2">
-                    Upper Deck (Sleeper Berths 2+1)
-                  </span>
-                  <div className="grid grid-cols-6 gap-2">
-                    {Array.from({ length: 12 }, (_, i) => {
-                      const seatNum = `U${i + 1}`;
-                      const isBooked = bookedSeatNumbers.includes(seatNum);
-                      const isSelected = selectedSeats.includes(seatNum);
-                      const isLadies = ladiesSeats.includes(seatNum);
-
-                      return (
-                        <button
-                          key={seatNum}
-                          type="button"
-                          disabled={isBooked}
-                          onClick={() => handleSeatClick(seatNum)}
-                          className={`p-2 rounded-xl text-center font-mono font-bold transition-all shadow-sm ${
-                            isBooked
-                              ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-                              : isSelected
-                              ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-300 scale-105'
-                              : isLadies
-                              ? 'bg-pink-950/70 border-2 border-pink-500 text-pink-200 hover:bg-pink-900'
-                              : 'bg-slate-800 border-2 border-slate-600 text-slate-200 hover:border-amber-400 hover:text-white'
-                          }`}
-                        >
-                          <div className="text-xs">{seatNum}</div>
-                          <div className="text-[9px] font-normal opacity-80">
-                            {isBooked ? 'SOLD' : isSelected ? 'PICK' : isLadies ? 'LADIES' : '₹' + currentRoute.baseFare}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -714,6 +943,7 @@ export const RouteTickets: React.FC = () => {
                     gender: 'M',
                     boardingStop: currentRoute.stops[0].name,
                     droppingStop: currentRoute.stops[currentRoute.stops.length - 1].name,
+                    idProof: 'Aadhaar / Voter ID',
                   };
 
                   return (
@@ -766,24 +996,42 @@ export const RouteTickets: React.FC = () => {
                         </div>
                       </div>
 
-                      <div>
-                        <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">
-                          Dropping Point (Fare Changes by Stop)
-                        </label>
-                        <select
-                          value={p.droppingStop}
-                          onChange={(e) => setPassengersMap({
-                            ...passengersMap,
-                            [seatNum]: { ...p, droppingStop: e.target.value }
-                          })}
-                          className="w-full p-1.5 rounded border border-slate-300 text-xs bg-white font-medium"
-                        >
-                          {currentRoute.stops.slice(1).map((s) => (
-                            <option key={s.name} value={s.name}>
-                              {s.name} ({formatINR(Math.round(currentRoute.baseFare * s.fareMultiplier))})
-                            </option>
-                          ))}
-                        </select>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">
+                            ID Proof (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Aadhaar / Passport"
+                            value={p.idProof || ''}
+                            onChange={(e) => setPassengersMap({
+                              ...passengersMap,
+                              [seatNum]: { ...p, idProof: e.target.value }
+                            })}
+                            className="w-full p-1.5 rounded border border-slate-300 text-xs"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">
+                            Dropping Stop
+                          </label>
+                          <select
+                            value={p.droppingStop}
+                            onChange={(e) => setPassengersMap({
+                              ...passengersMap,
+                              [seatNum]: { ...p, droppingStop: e.target.value }
+                            })}
+                            className="w-full p-1.5 rounded border border-slate-300 text-xs bg-white font-medium truncate"
+                          >
+                            {currentRoute.stops.slice(1).map((s) => (
+                              <option key={s.name} value={s.name}>
+                                {s.name} ({formatINR(Math.round(currentRoute.baseFare * s.fareMultiplier))})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                     </div>
                   );
@@ -820,7 +1068,98 @@ export const RouteTickets: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 3: DAILY SCHEDULE & TRIP MANIFEST */}
+      {/* TAB 3: ROUTE MASTER */}
+      {activeTab === 'routes' && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {routes.map((rt) => (
+              <div
+                key={rt.id}
+                className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4 hover:border-amber-400 transition-all flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-start justify-between border-b border-slate-100 pb-3 mb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-black text-slate-900 text-base">{rt.name}</h3>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900">
+                          {rt.busType}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
+                        <Navigation className="w-3.5 h-3.5 text-amber-500" />
+                        <span>{rt.origin} → {rt.destination}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleOpenEditRoute(rt)}
+                      className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900"
+                      title="Edit Route Fares & Timings"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 p-2.5 bg-slate-50 rounded-xl text-xs border border-slate-100 mb-3">
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-medium">Distance</span>
+                      <strong className="font-mono text-slate-900">{rt.distanceKm} KM</strong>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-medium">Departure / Arrival</span>
+                      <strong className="font-mono text-slate-900">{rt.departureTime} → {rt.arrivalTime}</strong>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-medium">Base Fare / Seat</span>
+                      <strong className="font-mono text-amber-700 font-black">{formatINR(rt.baseFare)}</strong>
+                    </div>
+                  </div>
+
+                  {/* Intermediate Stops Table */}
+                  <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    En-Route Stops & Fare Schedule ({rt.stops.length} Stops)
+                  </h4>
+                  <div className="border border-slate-200 rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-[11px]">
+                      <thead className="bg-slate-100 font-bold text-slate-700">
+                        <tr>
+                          <th className="p-2">Stop Name</th>
+                          <th className="p-2 text-right">Distance</th>
+                          <th className="p-2 text-right">Fare Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-medium">
+                        {rt.stops.map((stop, sIdx) => (
+                          <tr key={sIdx} className="hover:bg-slate-50">
+                            <td className="p-2 font-semibold text-slate-800">{stop.name}</td>
+                            <td className="p-2 text-right font-mono text-slate-500">{stop.distanceKm} km</td>
+                            <td className="p-2 text-right font-mono font-bold text-slate-900">
+                              {formatINR(Math.round(rt.baseFare * stop.fareMultiplier))}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="text-slate-500">Seat Classes: Sleeper 2+1 & Push-Back Seater</span>
+                  <button
+                    onClick={() => { setSelectedRouteId(rt.id); setActiveTab('booking'); }}
+                    className="flex items-center gap-1 font-bold text-amber-700 hover:text-amber-800"
+                  >
+                    <span>Book on this Route</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: DAILY SCHEDULE & TRIP MANIFEST */}
       {activeTab === 'manifest' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
@@ -834,7 +1173,7 @@ export const RouteTickets: React.FC = () => {
             </div>
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-sm"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print Manifest</span>
@@ -876,6 +1215,141 @@ export const RouteTickets: React.FC = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Warning Modal when editing Confirmed Record */}
+      <WarningModal
+        isOpen={showEditWarning}
+        type="confirmed_record"
+        title="Warning: Editing Confirmed Route Ticket"
+        message="This ticket is already confirmed with an active PNR and allocated bus berth. Any changes to passenger names, phone, or destination will update the manifest and be permanently recorded in the Audit Change History."
+        confirmLabel="Proceed to Edit"
+        cancelLabel="Keep as is"
+        onConfirm={handleProceedWithTicketEdit}
+        onCancel={() => setShowEditWarning(false)}
+      />
+
+      {/* Edit Ticket Modal */}
+      {editTicketModalOpen && pendingEditTicket && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 text-slate-900 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between border-b pb-3 mb-4">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Edit Ticket #{pendingEditTicket.ticketNumber}
+                </h3>
+                <p className="text-xs text-slate-500">Route: {pendingEditTicket.routeName}</p>
+              </div>
+              <button onClick={() => setEditTicketModalOpen(false)} className="p-1 rounded text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveTicketEdit} className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Customer / Booker Name</label>
+                  <input
+                    type="text"
+                    value={editCustomerName}
+                    onChange={(e) => setEditCustomerName(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-slate-300"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Customer Mobile</label>
+                  <input
+                    type="text"
+                    value={editCustomerPhone}
+                    onChange={(e) => setEditCustomerPhone(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-slate-300 font-mono"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Passengers List Editor */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-2">Passengers</label>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {editPassengers.map((p, idx) => (
+                    <div key={idx} className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+                      <div className="flex justify-between items-center font-bold text-slate-800">
+                        <span>Seat: {p.seatNumber}</span>
+                        <span className="text-emerald-700 font-mono">{formatINR(p.fare)}</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <input
+                          type="text"
+                          value={p.name}
+                          onChange={(e) => {
+                            const newP = [...editPassengers];
+                            newP[idx].name = e.target.value;
+                            setEditPassengers(newP);
+                          }}
+                          placeholder="Name"
+                          className="p-1.5 rounded border border-slate-300"
+                        />
+                        <input
+                          type="number"
+                          value={p.age}
+                          onChange={(e) => {
+                            const newP = [...editPassengers];
+                            newP[idx].age = Number(e.target.value);
+                            setEditPassengers(newP);
+                          }}
+                          placeholder="Age"
+                          className="p-1.5 rounded border border-slate-300 text-center"
+                        />
+                        <select
+                          value={p.gender}
+                          onChange={(e) => {
+                            const newP = [...editPassengers];
+                            newP[idx].gender = e.target.value as any;
+                            setEditPassengers(newP);
+                          }}
+                          className="p-1.5 rounded border border-slate-300 bg-white"
+                        >
+                          <option value="M">Male</option>
+                          <option value="F">Female</option>
+                          <option value="O">Other</option>
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-medium mb-1">Reason for Modification (Audit Trail)</label>
+                <input
+                  type="text"
+                  value={editAuditReason}
+                  onChange={(e) => setEditAuditReason(e.target.value)}
+                  className="w-full p-2 rounded-lg border border-slate-300"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setEditTicketModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow"
+                >
+                  Save Modifications
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -937,6 +1411,159 @@ export const RouteTickets: React.FC = () => {
                 Confirm Cancellation & Issue Credit Note
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Ticket Confirmation Modal */}
+      {deleteTicketTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 text-slate-900 shadow-2xl border border-slate-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Delete Ticket #{deleteTicketTarget.ticketNumber}?
+                </h3>
+                <p className="text-xs text-slate-500">This action will remove the record and write a delete entry in audit history.</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 mb-4">
+              Are you sure you want to permanently delete ticket <strong>#{deleteTicketTarget.ticketNumber}</strong> ({deleteTicketTarget.customerName})? For client accounting, canceling is recommended instead.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                onClick={() => setDeleteTicketTarget(null)}
+                className="px-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold hover:bg-slate-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  deleteRouteTicket(deleteTicketTarget.id);
+                  setDeleteTicketTarget(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow"
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Route Master Create / Edit Modal */}
+      {routeModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 text-slate-900 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between border-b pb-3 mb-4">
+              <h3 className="text-base font-bold text-slate-900">
+                {editingRoute ? 'Edit Route Master' : '+ Add New Inter-State Route'}
+              </h3>
+              <button onClick={() => setRouteModalOpen(false)} className="p-1 rounded text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveRoute} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-600 font-medium mb-1">Route Name</label>
+                <input
+                  type="text"
+                  value={routeNameInput}
+                  onChange={(e) => setRouteNameInput(e.target.value)}
+                  className="w-full p-2 rounded-lg border border-slate-300"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Origin Point</label>
+                  <input
+                    type="text"
+                    value={originInput}
+                    onChange={(e) => setOriginInput(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-slate-300"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Destination Point</label>
+                  <input
+                    type="text"
+                    value={destInput}
+                    onChange={(e) => setDestInput(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-slate-300"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Distance (KM)</label>
+                  <input
+                    type="number"
+                    value={distanceKmInput}
+                    onChange={(e) => setDistanceKmInput(Number(e.target.value))}
+                    className="w-full p-2 rounded-lg border border-slate-300 font-mono"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Departure</label>
+                  <input
+                    type="text"
+                    value={depTimeInput}
+                    onChange={(e) => setDepTimeInput(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-slate-300 font-mono"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Arrival</label>
+                  <input
+                    type="text"
+                    value={arrTimeInput}
+                    onChange={(e) => setArrTimeInput(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-slate-300 font-mono"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-medium mb-1">Base Sleeper Fare (₹)</label>
+                <input
+                  type="number"
+                  value={baseFareInput}
+                  onChange={(e) => setBaseFareInput(Number(e.target.value))}
+                  className="w-full p-2 rounded-lg border border-slate-300 font-mono"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setRouteModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow"
+                >
+                  {editingRoute ? 'Update Route' : 'Create Route'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

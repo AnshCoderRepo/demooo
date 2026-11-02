@@ -5,14 +5,17 @@ import { formatDate } from '../utils/formatters';
 import { 
   BellRing, CheckCircle2, Clock, MessageSquare, Share2, 
   AlertTriangle, Filter, ShieldAlert, Truck, CreditCard, 
-  Users, BusFront, Calendar, RotateCcw
+  Users, BusFront, Calendar, RotateCcw, Settings, Plus, X, Trash2
 } from 'lucide-react';
 
 export const Reminders: React.FC = () => {
   const { 
-    reminders, 
+    reminders,
+    addReminder,
+    deleteReminder,
     snoozeReminder, 
     markReminderDone, 
+    updateSettings,
     sendMockSms, 
     showToast 
   } = useApp();
@@ -20,6 +23,22 @@ export const Reminders: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'snoozed' | 'done'>('pending');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [channelFilter, setChannelFilter] = useState<string>('all');
+
+  // Reminder Rule Settings modal
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [ruleDocExpiryDays, setRuleDocExpiryDays] = useState(15);
+  const [ruleEmiDays, setRuleEmiDays] = useState(5);
+  const [ruleTripDays, setRuleTripDays] = useState(1);
+  const [ruleCustDueDays, setRuleCustDueDays] = useState(3);
+  const [ruleSalaryDays, setRuleSalaryDays] = useState(3);
+
+  // Add Custom Reminder modal
+  const [addReminderOpen, setAddReminderOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState('Renew National Permit (All India)');
+  const [newDesc, setNewDesc] = useState('Payment of consolidated road tax authorization for coach DL 01 AB 4090');
+  const [newDueDate, setNewDueDate] = useState('2026-11-06');
+  const [newType, setNewType] = useState<Reminder['type']>('document_expiry');
+  const [newChannel, setNewChannel] = useState<'SMS' | 'WhatsApp' | 'In-App'>('WhatsApp');
 
   const isReminderFilterActive = statusFilter !== 'pending' || typeFilter !== 'all' || channelFilter !== 'all';
 
@@ -30,8 +49,10 @@ export const Reminders: React.FC = () => {
   };
 
   const filteredReminders = reminders.filter((r) => {
-    if (statusFilter === 'all') return true;
-    return r.status === statusFilter;
+    if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+    if (typeFilter !== 'all' && r.type !== typeFilter) return false;
+    if (channelFilter !== 'all' && r.deliveryChannel !== channelFilter) return false;
+    return true;
   });
 
   const getReminderIcon = (type: Reminder['type']) => {
@@ -60,6 +81,26 @@ export const Reminders: React.FC = () => {
     });
   };
 
+  const handleSaveSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    showToast({
+      type: 'success',
+      title: 'Reminder Rules Saved',
+      message: `Updated proactive alerts: Docs (${ruleDocExpiryDays}d), EMI (${ruleEmiDays}d), Trips (${ruleTripDays}d), Salary (${ruleSalaryDays}d).`,
+    });
+    setSettingsModalOpen(false);
+  };
+
+  const handleSaveCustomReminder = (e: React.FormEvent) => {
+    e.preventDefault();
+    showToast({
+      type: 'success',
+      title: 'Custom Reminder Created',
+      message: `${newTitle} scheduled for ${formatDate(newDueDate)}.`,
+    });
+    setAddReminderOpen(false);
+  };
+
   return (
     <div className="space-y-6 pb-12">
       {/* Top Banner */}
@@ -78,7 +119,28 @@ export const Reminders: React.FC = () => {
           </p>
         </div>
 
-        {/* Filter Controls */}
+        {/* Action Controls & Settings */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setSettingsModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-sm"
+          >
+            <Settings className="w-4 h-4 text-slate-500" />
+            <span>Reminder Rules</span>
+          </button>
+
+          <button
+            onClick={() => setAddReminderOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Add Reminder</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Filter Controls Bar */}
+      <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex flex-wrap items-center gap-2">
           <div className="bg-slate-100 p-1 rounded-xl flex items-center text-xs font-bold">
             <button
@@ -138,18 +200,18 @@ export const Reminders: React.FC = () => {
             <option value="WhatsApp">WhatsApp Alert</option>
             <option value="in-app">In-App Notification</option>
           </select>
-
-          {isReminderFilterActive && (
-            <button
-              onClick={handleResetReminderFilters}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition-colors border border-rose-200"
-              title="Reset reminder filters"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Reset</span>
-            </button>
-          )}
         </div>
+
+        {isReminderFilterActive && (
+          <button
+            onClick={handleResetReminderFilters}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition-colors border border-rose-200"
+            title="Reset reminder filters"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Reset</span>
+          </button>
+        )}
       </div>
 
       {/* Reminders Feed */}
@@ -236,6 +298,233 @@ export const Reminders: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Reminder Advance Days Settings Modal */}
+      {settingsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 text-slate-900 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between border-b pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <Settings className="w-5 h-5 text-amber-500" />
+                <h3 className="text-base font-bold text-slate-900">
+                  Reminder Advance Days Configuration
+                </h3>
+              </div>
+              <button onClick={() => setSettingsModalOpen(false)} className="p-1 rounded text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 mb-4">
+              Configure how many days in advance the system generates automated SMS, WhatsApp, and in-app alerts before due dates.
+            </p>
+
+            <form onSubmit={handleSaveSettings} className="space-y-3.5 text-xs">
+              <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                <div>
+                  <strong className="block text-slate-800">RTO Document Expiry</strong>
+                  <span className="text-[11px] text-slate-500">Insurance, Fitness, Permit, PUC</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={ruleDocExpiryDays}
+                    onChange={(e) => setRuleDocExpiryDays(Number(e.target.value))}
+                    className="w-14 p-1.5 rounded border border-slate-300 font-mono text-center font-bold"
+                  />
+                  <span className="text-slate-500 font-medium">days</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                <div>
+                  <strong className="block text-slate-800">Bus EMI Auto-Debit</strong>
+                  <span className="text-[11px] text-slate-500">Tata Capital, HDFC, Chola</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={ruleEmiDays}
+                    onChange={(e) => setRuleEmiDays(Number(e.target.value))}
+                    className="w-14 p-1.5 rounded border border-slate-300 font-mono text-center font-bold"
+                  />
+                  <span className="text-slate-500 font-medium">days</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                <div>
+                  <strong className="block text-slate-800">Tomorrow's Trip Duties</strong>
+                  <span className="text-[11px] text-slate-500">Driver assignments & passenger alerts</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    min={1}
+                    max={7}
+                    value={ruleTripDays}
+                    onChange={(e) => setRuleTripDays(Number(e.target.value))}
+                    className="w-14 p-1.5 rounded border border-slate-300 font-mono text-center font-bold"
+                  />
+                  <span className="text-slate-500 font-medium">days</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                <div>
+                  <strong className="block text-slate-800">Customer Pending Dues</strong>
+                  <span className="text-[11px] text-slate-500">Unsettled charter & corporate balances</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={ruleCustDueDays}
+                    onChange={(e) => setRuleCustDueDays(Number(e.target.value))}
+                    className="w-14 p-1.5 rounded border border-slate-300 font-mono text-center font-bold"
+                  />
+                  <span className="text-slate-500 font-medium">days</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                <div>
+                  <strong className="block text-slate-800">Monthly Salary Payout Day</strong>
+                  <span className="text-[11px] text-slate-500">Staff attendance & payroll finalization</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={ruleSalaryDays}
+                    onChange={(e) => setRuleSalaryDays(Number(e.target.value))}
+                    className="w-14 p-1.5 rounded border border-slate-300 font-mono text-center font-bold"
+                  />
+                  <span className="text-slate-500 font-medium">days</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setSettingsModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow"
+                >
+                  Save Alert Rules
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Custom Reminder Modal */}
+      {addReminderOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 text-slate-900 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between border-b pb-3 mb-4">
+              <h3 className="text-base font-bold text-slate-900">
+                + Add Operational Reminder
+              </h3>
+              <button onClick={() => setAddReminderOpen(false)} className="p-1 rounded text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCustomReminder} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-600 font-medium mb-1">Reminder Title</label>
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="w-full p-2 rounded-lg border border-slate-300"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-medium mb-1">Description / Notes</label>
+                <textarea
+                  value={newDesc}
+                  onChange={(e) => setNewDesc(e.target.value)}
+                  rows={2}
+                  className="w-full p-2 rounded-lg border border-slate-300"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Target Due Date</label>
+                  <input
+                    type="date"
+                    value={newDueDate}
+                    onChange={(e) => setNewDueDate(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-slate-300 font-mono"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Delivery Channel</label>
+                  <select
+                    value={newChannel}
+                    onChange={(e) => setNewChannel(e.target.value as any)}
+                    className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium"
+                  >
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="SMS">SMS Dispatch</option>
+                    <option value="In-App">In-App Notification</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-medium mb-1">Category</label>
+                <select
+                  value={newType}
+                  onChange={(e) => setNewType(e.target.value as any)}
+                  className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium"
+                >
+                  <option value="document_expiry">RTO Document Expiry</option>
+                  <option value="emi_due">Vehicle Loan EMI</option>
+                  <option value="tomorrow_trip">Upcoming Trip</option>
+                  <option value="pending_payment">Customer Payment</option>
+                  <option value="salary_day">Staff Payroll</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setAddReminderOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow"
+                >
+                  Schedule Reminder
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

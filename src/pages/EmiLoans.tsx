@@ -4,11 +4,19 @@ import { LoanEMI } from '../types';
 import { formatINR, formatDate, exportToCSV } from '../utils/formatters';
 import { 
   Landmark, AlertTriangle, CheckCircle2, Clock, 
-  CreditCard, Download, History, X, Bus, Plus, Search, Filter, RotateCcw 
+  CreditCard, Download, History, X, Bus, Plus, Search, Filter, RotateCcw,
+  Edit, Calendar, ArrowRight, ShieldCheck, FileText, DollarSign, Trash2
 } from 'lucide-react';
+import { WarningModal } from '../components/modals/WarningModal';
 
 export const EmiLoans: React.FC = () => {
-  const { emis, buses, markEmiPaid, openHistory, showToast } = useApp();
+  const { emis, buses, markEmiPaid, 
+    updateLoanEmi, 
+    addLoanEmi, 
+    deleteLoanEmi,
+    openHistory, 
+    showToast 
+  } = useApp();
 
   const [activeTab, setActiveTab] = useState<'loans' | 'purchaseRecords'>('loans');
   const [payModalEmi, setPayModalEmi] = useState<LoanEMI | null>(null);
@@ -17,6 +25,35 @@ export const EmiLoans: React.FC = () => {
   const [financierFilter, setFinancierFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [urgencyFilter, setUrgencyFilter] = useState('all');
+  const [busFilter, setBusFilter] = useState('all');
+  const [deleteModalEmi, setDeleteModalEmi] = useState<LoanEMI | null>(null);
+
+  // History modal for past paid instalments
+  const [historyModalEmi, setHistoryModalEmi] = useState<LoanEMI | null>(null);
+
+  // Edit EMI loan state
+  const [editModalEmi, setEditModalEmi] = useState<LoanEMI | null>(null);
+  const [editEmiAmount, setEditEmiAmount] = useState(0);
+  const [editDueDay, setEditDueDay] = useState(5);
+  const [editRemaining, setEditRemaining] = useState(36);
+  const [editFinancier, setEditFinancier] = useState('');
+
+  // Add new vehicle loan modal state
+  const [newLoanModalOpen, setNewLoanModalOpen] = useState(false);
+  const [newBusNumber, setNewBusNumber] = useState('DL 01 AB 9090');
+  const [newFinancier, setNewFinancier] = useState('Tata Capital Commercial Vehicle Finance');
+  const [newLoanAmount, setNewLoanAmount] = useState(4500000);
+  const [newEmiAmount, setNewEmiAmount] = useState(88500);
+  const [newDueDay, setNewDueDay] = useState(10);
+  const [newTenure, setNewTenure] = useState(60);
+
+  // Purchase/Sale Asset state
+  const [assetModalOpen, setAssetModalOpen] = useState(false);
+  const [assetBusNumber, setAssetBusNumber] = useState('DL 01 CD 5050');
+  const [assetType, setAssetType] = useState<'Purchase' | 'Sale'>('Purchase');
+  const [assetPrice, setAssetPrice] = useState(6500000);
+  const [assetFinancier, setAssetFinancier] = useState('HDFC Bank');
+  const [assetDate, setAssetDate] = useState('2026-11-02');
 
   // Find EMIs due within 5 days (5 Nov is in 3 days!)
   const emiDueSoon = emis.filter((e) => e.status === 'active' && e.dueDayOfMonth >= 1 && e.dueDayOfMonth <= 7);
@@ -27,6 +64,63 @@ export const EmiLoans: React.FC = () => {
     setPayModalEmi(null);
   };
 
+  const handleOpenEdit = (emi: LoanEMI) => {
+    setEditModalEmi(emi);
+    setEditEmiAmount(emi.emiAmount);
+    setEditDueDay(emi.dueDayOfMonth);
+    setEditRemaining(emi.remainingInstalments);
+    setEditFinancier(emi.financeCompany);
+  };
+
+  const handleSaveEmiEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editModalEmi) return;
+    updateLoanEmi(editModalEmi.id, {
+      emiAmount: Number(editEmiAmount),
+      dueDayOfMonth: Number(editDueDay),
+      remainingInstalments: Number(editRemaining),
+      financeCompany: editFinancier,
+    }, `Updated loan terms: ₹${editEmiAmount}/mo, due day ${editDueDay}`);
+    setEditModalEmi(null);
+  };
+
+  const handleCreateNewLoan = (e: React.FormEvent) => {
+    e.preventDefault();
+    const matchingBus = buses.find(b => b.plateNumber === newBusNumber) || buses[0];
+    const newEmi: LoanEMI = {
+      id: `emi-${Date.now()}`,
+      busId: matchingBus.id,
+      busNumber: newBusNumber,
+      financeCompany: newFinancier,
+      loanAmount: Number(newLoanAmount),
+      emiAmount: Number(newEmiAmount),
+      dueDayOfMonth: Number(newDueDay),
+      tenureMonths: Number(newTenure),
+      remainingInstalments: Number(newTenure),
+      status: 'active',
+      purchasePrice: Number(newLoanAmount) * 1.25,
+      purchaseDate: '2026-11-02',
+      paymentHistory: [],
+    };
+    addLoanEmi(newEmi);
+    setNewLoanModalOpen(false);
+  };
+
+    const handleConfirmDelete = () => {
+    if (!deleteModalEmi) return;
+    deleteLoanEmi(deleteModalEmi.id);
+    setDeleteModalEmi(null);
+  };
+
+  const handleRecordAsset = (e: React.FormEvent) => {
+    e.preventDefault();
+    showToast({
+      type: 'success',
+      title: `Asset ${assetType} Recorded`,
+      message: `${assetBusNumber} ${assetType} transaction of ${formatINR(assetPrice)} logged in fleet asset capital ledger.`,
+    });
+    setAssetModalOpen(false);
+  };
 
   // Filtered EMIs
   const filteredEmis = emis.filter((e) => {
@@ -39,25 +133,28 @@ export const EmiLoans: React.FC = () => {
       urgencyFilter === 'all' ? true :
       urgencyFilter === 'dueSoon' ? (e.status === 'active' && e.dueDayOfMonth <= 7) :
       (e.status === 'active' && e.dueDayOfMonth > 7);
-    return matchesSearch && matchesFinancier && matchesStatus && matchesUrgency;
+    const matchesBus = busFilter === 'all' || e.busNumber === busFilter || e.busId === busFilter;
+    return matchesSearch && matchesFinancier && matchesStatus && matchesUrgency && matchesBus;
   });
 
   const isEmiFilterActive = 
     searchQuery !== '' || 
     financierFilter !== 'all' || 
     statusFilter !== 'all' || 
-    urgencyFilter !== 'all';
+    urgencyFilter !== 'all' ||
+    busFilter !== 'all';
 
   const handleResetEmiFilters = () => {
     setSearchQuery('');
     setFinancierFilter('all');
     setStatusFilter('all');
     setUrgencyFilter('all');
+    setBusFilter('all');
   };
 
   const handleExportCSV = () => {
     const headers = ['Bus Number', 'Finance Company', 'Loan Amount', 'Monthly EMI', 'Due Day', 'Tenure Months', 'Remaining Months', 'Status'];
-    const rows = emis.map((e) => [
+    const rows = filteredEmis.map((e) => [
       e.busNumber,
       e.financeCompany,
       e.loanAmount,
@@ -89,7 +186,7 @@ export const EmiLoans: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="bg-slate-100 p-1 rounded-xl flex items-center text-xs font-bold">
             <button
               onClick={() => setActiveTab('loans')}
@@ -108,6 +205,26 @@ export const EmiLoans: React.FC = () => {
               Asset Purchase / Sale Records
             </button>
           </div>
+
+          {activeTab === 'loans' && (
+            <button
+              onClick={() => setNewLoanModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Add Vehicle Loan</span>
+            </button>
+          )}
+
+          {activeTab === 'purchaseRecords' && (
+            <button
+              onClick={() => setAssetModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Record Purchase / Sale</span>
+            </button>
+          )}
 
           <button
             onClick={handleExportCSV}
@@ -183,6 +300,17 @@ export const EmiLoans: React.FC = () => {
           </span>
 
           <select
+            value={busFilter}
+            onChange={(e) => setBusFilter(e.target.value)}
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium font-mono"
+          >
+            <option value="all">All Fleet Buses</option>
+            {buses.map((b) => (
+              <option key={b.id} value={b.plateNumber}>{b.plateNumber} ({b.model})</option>
+            ))}
+          </select>
+
+          <select
             value={financierFilter}
             onChange={(e) => setFinancierFilter(e.target.value)}
             className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium"
@@ -225,7 +353,7 @@ export const EmiLoans: React.FC = () => {
             return (
               <div
                 key={emi.id}
-                className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4 hover:border-amber-400 transition-all flex flex-col justify-between"
+                className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4 hover:border-purple-400 transition-all flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex items-center justify-between border-b pb-3 mb-3">
@@ -263,7 +391,7 @@ export const EmiLoans: React.FC = () => {
                     </div>
                     <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
                       <div
-                        className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full transition-all duration-500"
+                        className="h-full bg-gradient-to-r from-purple-500 to-emerald-500 rounded-full transition-all duration-500"
                         style={{ width: `${progressPercent}%` }}
                       />
                     </div>
@@ -274,21 +402,51 @@ export const EmiLoans: React.FC = () => {
                 </div>
 
                 {/* Card Footer Actions */}
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <button
-                    onClick={() => openHistory('EMI Loan', emi.id, `${emi.busNumber} (${emi.financeCompany})`)}
-                    className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500"
-                    title="Audit History"
-                  >
-                    <History className="w-3.5 h-3.5" />
-                  </button>
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-1">
+                    {/* Audit History */}
+                    <button
+                      onClick={() => openHistory('EMI Loan', emi.id, `${emi.busNumber} (${emi.financeCompany})`)}
+                      className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500"
+                      title="Audit History"
+                    >
+                      <History className="w-3.5 h-3.5" />
+                    </button>
 
+                    {/* Edit Loan Terms */}
+                    <button
+                      onClick={() => handleOpenEdit(emi)}
+                      className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-amber-600 hover:text-amber-700"
+                      title="Edit Loan Terms"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setDeleteModalEmi(emi)}
+                      className="p-1.5 rounded-lg border border-slate-200 hover:bg-rose-50 text-slate-500 hover:text-rose-600"
+                      title="Delete Loan Record"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+
+                    {/* Payment History Log */}
+                    <button
+                      onClick={() => setHistoryModalEmi(emi)}
+                      className="px-2 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1"
+                      title="View Past Payment Ledger"
+                    >
+                      <Clock className="w-3 h-3 text-slate-400" />
+                      <span>Ledger</span>
+                    </button>
+                  </div>
+
+                  {/* Mark as Paid Action */}
                   <button
                     onClick={() => setPayModalEmi(emi)}
                     className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Mark as Paid</span>
+                    <span>Mark Paid</span>
                   </button>
                 </div>
               </div>
@@ -300,13 +458,22 @@ export const EmiLoans: React.FC = () => {
       {/* TAB 2: ASSET PURCHASE RECORDS */}
       {activeTab === 'purchaseRecords' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
-          <div className="border-b pb-3">
-            <h3 className="text-base font-bold text-slate-900">
-              Commercial Fleet Asset Register (Capital Expenditure)
-            </h3>
-            <p className="text-xs text-slate-500">
-              Original vehicle purchase invoice values, finance split, chassis numbers, and depreciation records.
-            </p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b pb-3">
+            <div>
+              <h3 className="text-base font-bold text-slate-900">
+                Commercial Fleet Asset Register (Capital Expenditure)
+              </h3>
+              <p className="text-xs text-slate-500">
+                Original vehicle purchase invoice values, finance split, chassis numbers, and depreciation records.
+              </p>
+            </div>
+            <button
+              onClick={() => setAssetModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Record Asset Transaction</span>
+            </button>
           </div>
 
           <table className="w-full text-left text-xs border border-slate-200 rounded-xl overflow-hidden">
@@ -318,6 +485,7 @@ export const EmiLoans: React.FC = () => {
                 <th className="p-3 text-right">Financed Loan</th>
                 <th className="p-3 text-right">Margin Money (Self Equity)</th>
                 <th className="p-3">Financier</th>
+                <th className="p-3 text-center">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
@@ -331,10 +499,178 @@ export const EmiLoans: React.FC = () => {
                     {formatINR(e.purchasePrice - e.loanAmount)}
                   </td>
                   <td className="p-3 text-slate-700">{e.financeCompany}</td>
+                  <td className="p-3 text-center">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                      Hypothecated
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Payment History Modal */}
+      {historyModalEmi && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 text-slate-900 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between border-b pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
+                  <Landmark className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    EMI Payment Ledger • {historyModalEmi.busNumber}
+                  </h3>
+                  <p className="text-xs text-slate-500">{historyModalEmi.financeCompany}</p>
+                </div>
+              </div>
+              <button onClick={() => setHistoryModalEmi(null)} className="p-1 rounded text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-xl text-xs border border-slate-100 mb-4">
+              <div>
+                <span className="text-slate-400 text-[10px] block">Sanctioned Amount</span>
+                <strong className="font-mono text-slate-900">{formatINR(historyModalEmi.loanAmount)}</strong>
+              </div>
+              <div>
+                <span className="text-slate-400 text-[10px] block">Monthly Debit</span>
+                <strong className="font-mono text-purple-700">{formatINR(historyModalEmi.emiAmount)} / mo</strong>
+              </div>
+            </div>
+
+            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              Paid Instalments History
+            </h4>
+
+            {historyModalEmi.paymentHistory && historyModalEmi.paymentHistory.length > 0 ? (
+              <div className="border border-slate-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-100 text-slate-700 font-bold">
+                    <tr>
+                      <th className="p-2.5">Date</th>
+                      <th className="p-2.5 text-right">Amount</th>
+                      <th className="p-2.5">Bank Reference / UTR</th>
+                      <th className="p-2.5 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium">
+                    {historyModalEmi.paymentHistory.map((h, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50">
+                        <td className="p-2.5 font-mono">{formatDate(h.date)}</td>
+                        <td className="p-2.5 text-right font-mono font-bold text-emerald-700">{formatINR(h.amount)}</td>
+                        <td className="p-2.5 font-mono text-[11px] text-slate-600">{h.reference}</td>
+                        <td className="p-2.5 text-center">
+                          <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200">
+                            Debited ✓
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-slate-400 text-xs">
+                <Clock className="w-8 h-8 mx-auto mb-2 opacity-40 text-purple-500" />
+                <p>No past payment entries recorded yet. Click "Mark as Paid" to register the next instalment.</p>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-4 mt-4 border-t">
+              <button
+                onClick={() => setHistoryModalEmi(null)}
+                className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold"
+              >
+                Close Ledger
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit EMI Loan Modal */}
+      {editModalEmi && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 text-slate-900 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between border-b pb-3 mb-4">
+              <h3 className="text-base font-bold text-slate-900">
+                Edit Loan Terms • {editModalEmi.busNumber}
+              </h3>
+              <button onClick={() => setEditModalEmi(null)} className="p-1 rounded text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEmiEdit} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-600 font-medium mb-1">Finance Company</label>
+                <input
+                  type="text"
+                  value={editFinancier}
+                  onChange={(e) => setEditFinancier(e.target.value)}
+                  className="w-full p-2 rounded-lg border border-slate-300"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Monthly EMI (₹)</label>
+                  <input
+                    type="number"
+                    value={editEmiAmount}
+                    onChange={(e) => setEditEmiAmount(Number(e.target.value))}
+                    className="w-full p-2 rounded-lg border border-slate-300 font-mono"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Monthly Due Day (1-31)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={editDueDay}
+                    onChange={(e) => setEditDueDay(Number(e.target.value))}
+                    className="w-full p-2 rounded-lg border border-slate-300 font-mono"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-medium mb-1">Remaining Instalments (Months)</label>
+                <input
+                  type="number"
+                  value={editRemaining}
+                  onChange={(e) => setEditRemaining(Number(e.target.value))}
+                  className="w-full p-2 rounded-lg border border-slate-300 font-mono"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setEditModalEmi(null)}
+                  className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold shadow"
+                >
+                  Save Loan Terms
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -351,32 +687,29 @@ export const EmiLoans: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 text-xs space-y-1.5 mb-4">
-              <div className="flex justify-between font-bold text-emerald-950">
-                <span>Monthly Installment:</span>
-                <span className="font-mono text-base">{formatINR(payModalEmi.emiAmount)}</span>
+            <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 text-xs space-y-2 mb-4">
+              <div className="flex justify-between">
+                <span className="text-slate-600">Financier:</span>
+                <span className="font-bold text-purple-900">{payModalEmi.financeCompany}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-600">EMI Instalment:</span>
+                <span className="font-mono font-black text-slate-900 text-sm">{formatINR(payModalEmi.emiAmount)}</span>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>Financier:</span>
-                <span>{payModalEmi.financeCompany}</span>
-              </div>
-              <div className="flex justify-between text-slate-600">
-                <span>Instalments Remaining:</span>
-                <span>{payModalEmi.remainingInstalments} → {payModalEmi.remainingInstalments - 1}</span>
+                <span>Remaining Tenure:</span>
+                <span>{payModalEmi.remainingInstalments} Months</span>
               </div>
             </div>
 
             <div className="space-y-3 text-xs mb-4">
               <div>
-                <label className="block text-slate-600 font-medium mb-1">
-                  Bank Clearing Reference / NACH UTR No *
-                </label>
+                <label className="block text-slate-600 mb-1">Bank Auto-Debit / UTR Reference</label>
                 <input
                   type="text"
-                  required
                   value={payReference}
                   onChange={(e) => setPayReference(e.target.value)}
-                  className="w-full p-2 rounded-lg border border-slate-300 font-mono text-xs"
+                  className="w-full p-2 rounded-lg border border-slate-300 font-mono"
                 />
               </div>
             </div>
@@ -384,7 +717,7 @@ export const EmiLoans: React.FC = () => {
             <div className="flex items-center justify-end gap-2.5">
               <button
                 onClick={() => setPayModalEmi(null)}
-                className="px-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold"
+                className="px-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold hover:bg-slate-100"
               >
                 Cancel
               </button>
@@ -392,9 +725,210 @@ export const EmiLoans: React.FC = () => {
                 onClick={handleConfirmPayment}
                 className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow"
               >
-                Confirm Clearance
+                Confirm Payment & Decrement Tenure
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add New Vehicle Loan Modal */}
+      {newLoanModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 text-slate-900 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between border-b pb-3 mb-4">
+              <h3 className="text-base font-bold text-slate-900">
+                + Register New Commercial Vehicle Loan
+              </h3>
+              <button onClick={() => setNewLoanModalOpen(false)} className="p-1 rounded text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateNewLoan} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-600 font-medium mb-1">Fleet Bus Registration</label>
+                <select
+                  value={newBusNumber}
+                  onChange={(e) => setNewBusNumber(e.target.value)}
+                  className="w-full p-2 rounded-lg border border-slate-300 font-bold bg-white"
+                >
+                  {buses.map((b) => (
+                    <option key={b.id} value={b.plateNumber}>{b.plateNumber} ({b.model})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-medium mb-1">Financier / Bank</label>
+                <select
+                  value={newFinancier}
+                  onChange={(e) => setNewFinancier(e.target.value)}
+                  className="w-full p-2 rounded-lg border border-slate-300 font-medium bg-white"
+                >
+                  <option value="Tata Capital Commercial Vehicle Finance">Tata Capital Commercial Vehicle Finance</option>
+                  <option value="HDFC Bank Commercial Transport">HDFC Bank Commercial Transport</option>
+                  <option value="Cholamandalam Vehicle Finance">Cholamandalam Vehicle Finance</option>
+                  <option value="ICICI Bank Commercial Vehicle Loans">ICICI Bank Commercial Loans</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Sanctioned Loan (₹)</label>
+                  <input
+                    type="number"
+                    value={newLoanAmount}
+                    onChange={(e) => setNewLoanAmount(Number(e.target.value))}
+                    className="w-full p-2 rounded-lg border border-slate-300 font-mono"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Monthly EMI (₹)</label>
+                  <input
+                    type="number"
+                    value={newEmiAmount}
+                    onChange={(e) => setNewEmiAmount(Number(e.target.value))}
+                    className="w-full p-2 rounded-lg border border-slate-300 font-mono"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Due Day of Month</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={newDueDay}
+                    onChange={(e) => setNewDueDay(Number(e.target.value))}
+                    className="w-full p-2 rounded-lg border border-slate-300 font-mono"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Total Tenure (Months)</label>
+                  <input
+                    type="number"
+                    value={newTenure}
+                    onChange={(e) => setNewTenure(Number(e.target.value))}
+                    className="w-full p-2 rounded-lg border border-slate-300 font-mono"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setNewLoanModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold shadow"
+                >
+                  Register Loan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Record Purchase / Sale Modal */}
+      {assetModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 text-slate-900 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between border-b pb-3 mb-4">
+              <h3 className="text-base font-bold text-slate-900">
+                + Record Fleet Capital Transaction
+              </h3>
+              <button onClick={() => setAssetModalOpen(false)} className="p-1 rounded text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleRecordAsset} className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Transaction Type</label>
+                  <select
+                    value={assetType}
+                    onChange={(e) => setAssetType(e.target.value as any)}
+                    className="w-full p-2 rounded-lg border border-slate-300 bg-white font-bold"
+                  >
+                    <option value="Purchase">Vehicle Purchase (Capex)</option>
+                    <option value="Sale">Vehicle Sale / Scrapped</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Bus Registration</label>
+                  <input
+                    type="text"
+                    value={assetBusNumber}
+                    onChange={(e) => setAssetBusNumber(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-slate-300 font-mono font-bold"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Invoice Value (₹)</label>
+                  <input
+                    type="number"
+                    value={assetPrice}
+                    onChange={(e) => setAssetPrice(Number(e.target.value))}
+                    className="w-full p-2 rounded-lg border border-slate-300 font-mono"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={assetDate}
+                    onChange={(e) => setAssetDate(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-slate-300 font-mono"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-medium mb-1">Financier / Counterparty Dealer</label>
+                <input
+                  type="text"
+                  value={assetFinancier}
+                  onChange={(e) => setAssetFinancier(e.target.value)}
+                  className="w-full p-2 rounded-lg border border-slate-300"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setAssetModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold shadow"
+                >
+                  Save Record
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

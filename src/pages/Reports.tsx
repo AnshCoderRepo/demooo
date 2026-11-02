@@ -17,7 +17,9 @@ export const Reports: React.FC = () => {
     tickets, 
     payments, 
     expenses, 
-    customers, 
+    customers,
+    workers,
+    advances,
     showToast 
   } = useApp();
 
@@ -117,7 +119,7 @@ export const Reports: React.FC = () => {
             <button
               onClick={() => setReportTab('fleetProfit')}
               className={`px-3 py-1.5 rounded-lg transition-colors ${
-                reportTab === 'fleetProfit' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+                reportTab === 'fleetProfit' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               Bus Profitability
@@ -125,7 +127,7 @@ export const Reports: React.FC = () => {
             <button
               onClick={() => setReportTab('occupancy')}
               className={`px-3 py-1.5 rounded-lg transition-colors ${
-                reportTab === 'occupancy' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+                reportTab === 'occupancy' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               Route Occupancy
@@ -133,7 +135,7 @@ export const Reports: React.FC = () => {
             <button
               onClick={() => setReportTab('fuelEfficiency')}
               className={`px-3 py-1.5 rounded-lg transition-colors ${
-                reportTab === 'fuelEfficiency' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+                reportTab === 'fuelEfficiency' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               Fuel Mileage

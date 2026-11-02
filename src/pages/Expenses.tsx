@@ -4,15 +4,19 @@ import { Expense, ExpenseCategory } from '../types';
 import { formatINR, formatDate, exportToCSV, TODAY_STR, isDateInFilter, DateFilterOption } from '../utils/formatters';
 import { 
   Receipt, Plus, Search, Filter, Download, ArrowUpRight, 
-  TrendingDown, FileImage, History, Eye, X, CheckCircle, RotateCcw, Calendar 
+  TrendingDown, FileImage, History, Eye, X, CheckCircle, RotateCcw, Calendar,
+  Edit, Trash2, AlertTriangle, ShieldAlert
 } from 'lucide-react';
+import { WarningModal } from '../components/modals/WarningModal';
 
 export const Expenses: React.FC = () => {
   const { 
     expenses, 
     buses, 
     charterBookings, 
-    addExpense, 
+    addExpense,
+    updateExpense,
+    deleteExpense,
     openHistory, 
     showToast 
   } = useApp();
@@ -28,6 +32,23 @@ export const Expenses: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [previewBillUrl, setPreviewBillUrl] = useState<string | null>(null);
+
+  // Edit & Delete modal states
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [deleteModalExpense, setDeleteModalExpense] = useState<Expense | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    date: TODAY_STR,
+    category: 'Diesel' as ExpenseCategory,
+    amount: 0,
+    busId: 'bus-1',
+    busNumber: 'DL 01 AB 4090',
+    tripTitle: '',
+    paidBy: '',
+    billPhotoUrl: '',
+    gstPaid: 0,
+    notes: '',
+    auditReason: 'Adjusted bill amount and GST ITC',
+  });
 
   const initialForm = {
     date: TODAY_STR,
@@ -69,7 +90,9 @@ export const Expenses: React.FC = () => {
       (e.notes && e.notes.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCat = categoryFilter === 'all' || e.category === categoryFilter;
     const matchesBus = busFilter === 'all' || e.busId === busFilter;
-    return matchesSearch && matchesCat && matchesBus;
+    const matchesDate = isDateInFilter(e.date, dateFilter, customStart, customEnd);
+    const matchesPaidBy = paidByFilter === 'all' || e.paidBy === paidByFilter;
+    return matchesSearch && matchesCat && matchesBus && matchesDate && matchesPaidBy;
   });
 
   const totalExpenseAmount = filteredExpenses.reduce((s, e) => s + e.amount, 0);
@@ -91,6 +114,48 @@ export const Expenses: React.FC = () => {
       notes: formData.notes,
     });
     setIsModalOpen(false);
+  };
+
+    const handleOpenEdit = (exp: Expense) => {
+    setEditingExpense(exp);
+    setEditFormData({
+      date: exp.date,
+      category: exp.category,
+      amount: exp.amount,
+      busId: exp.busId || 'bus-1',
+      busNumber: exp.busNumber || 'Office Fleet',
+      tripTitle: exp.tripTitle || '',
+      paidBy: exp.paidBy,
+      billPhotoUrl: exp.billPhotoUrl || '',
+      gstPaid: exp.gstPaid || 0,
+      notes: exp.notes || '',
+      auditReason: 'Updated invoice / maintenance specs',
+    });
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingExpense) return;
+    const selBus = buses.find((b) => b.id === editFormData.busId);
+    updateExpense(editingExpense.id, {
+      date: editFormData.date,
+      category: editFormData.category,
+      amount: Number(editFormData.amount),
+      busId: selBus?.id,
+      busNumber: selBus?.plateNumber,
+      tripTitle: editFormData.tripTitle,
+      paidBy: editFormData.paidBy,
+      billPhotoUrl: editFormData.billPhotoUrl,
+      gstPaid: Number(editFormData.gstPaid),
+      notes: editFormData.notes,
+    }, editFormData.auditReason);
+    setEditingExpense(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteModalExpense) return;
+    deleteExpense(deleteModalExpense.id);
+    setDeleteModalExpense(null);
   };
 
   const handleExportCSV = () => {

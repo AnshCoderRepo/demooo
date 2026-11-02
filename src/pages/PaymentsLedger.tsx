@@ -4,15 +4,19 @@ import { PaymentRecord } from '../types';
 import { formatINR, formatDate, exportToCSV, TODAY_STR, isDateInFilter, DateFilterOption } from '../utils/formatters';
 import { 
   CreditCard, Plus, Search, Filter, Download, ArrowUpRight, 
-  ArrowDownLeft, Printer, CheckCircle2, History, X, User, RotateCcw, Calendar 
+  ArrowDownLeft, Printer, CheckCircle2, History, X, User, RotateCcw, Calendar,
+  Edit, Trash2, AlertTriangle
 } from 'lucide-react';
+import { WarningModal } from '../components/modals/WarningModal';
 
 export const PaymentsLedger: React.FC = () => {
   const { 
     payments, 
     customers, 
     charterBookings, 
-    addPayment, 
+    addPayment,
+    updatePayment,
+    deletePayment,
     openHistory, 
     showToast 
   } = useApp();
@@ -27,6 +31,21 @@ export const PaymentsLedger: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [previewReceipt, setPreviewReceipt] = useState<PaymentRecord | null>(null);
+
+  // Edit & Warning Modal states
+  const [warningModalOpen, setWarningModalOpen] = useState(false);
+  const [pendingEditPayment, setPendingEditPayment] = useState<PaymentRecord | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalPayment, setDeleteModalPayment] = useState<PaymentRecord | null>(null);
+
+  const [editFormData, setEditFormData] = useState({
+    amount: 0,
+    mode: 'UPI' as PaymentRecord['mode'],
+    referenceUtr: '',
+    category: 'Charter Advance' as PaymentRecord['category'],
+    notes: '',
+    auditReason: 'Adjustment of payment mode / reference',
+  });
 
   const [formData, setFormData] = useState({
     date: TODAY_STR,
@@ -67,7 +86,9 @@ export const PaymentsLedger: React.FC = () => {
       (p.notes && p.notes.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesType = typeFilter === 'all' || p.type === typeFilter;
     const matchesMode = modeFilter === 'all' || p.mode === modeFilter;
-    return matchesSearch && matchesType && matchesMode;
+    const matchesDate = isDateInFilter(p.date, dateFilter, customStart, customEnd);
+    const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
+    return matchesSearch && matchesType && matchesMode && matchesDate && matchesCategory;
   });
 
   const totalInflows = payments.filter((p) => p.type === 'credit').reduce((s, p) => s + p.amount, 0);
@@ -90,6 +111,39 @@ export const PaymentsLedger: React.FC = () => {
       notes: formData.notes,
     });
     setIsModalOpen(false);
+  };
+
+    const handleEditClick = (pay: PaymentRecord) => {
+    setPendingEditPayment(pay);
+    setEditFormData({
+      amount: pay.amount,
+      mode: pay.mode,
+      referenceUtr: pay.referenceUtr,
+      category: pay.category,
+      notes: pay.notes || '',
+      auditReason: 'Corrected voucher details',
+    });
+    setWarningModalOpen(true);
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pendingEditPayment) return;
+    updatePayment(pendingEditPayment.id, {
+      amount: Number(editFormData.amount),
+      mode: editFormData.mode,
+      referenceUtr: editFormData.referenceUtr,
+      category: editFormData.category,
+      notes: editFormData.notes,
+    }, editFormData.auditReason);
+    setEditModalOpen(false);
+    setPendingEditPayment(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteModalPayment) return;
+    deletePayment(deleteModalPayment.id);
+    setDeleteModalPayment(null);
   };
 
   const handleExportCSV = () => {

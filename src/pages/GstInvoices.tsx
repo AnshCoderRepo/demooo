@@ -70,7 +70,12 @@ export const GstInvoices: React.FC = () => {
       inv.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (inv.customerGstin && inv.customerGstin.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesType = typeFilter === 'all' || inv.type === typeFilter;
-    return matchesSearch && matchesType;
+    const matchesDate = isDateInFilter(inv.date, dateFilter, customStart, customEnd);
+    const matchesTaxSupply = 
+      taxSupplyFilter === 'all' ? true :
+      taxSupplyFilter === 'intra' ? !inv.isInterState :
+      inv.isInterState;
+    return matchesSearch && matchesType && matchesDate && matchesTaxSupply;
   });
 
   const handleEditClick = (inv: GSTInvoice) => {

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { SmsTemplate, SmsLog } from '../types';
-import { formatDate } from '../utils/formatters';
+import { formatDate, exportToCSV } from '../utils/formatters';
 import { 
   MessageSquare, CheckCircle2, ShieldCheck, Send, 
   Search, Eye, Edit, Sparkles, Smartphone, Download, RotateCcw, Filter 
 } from 'lucide-react';
 
 export const SmsAlerts: React.FC = () => {
-  const { smsTemplates, smsLogs, sendMockSms, showToast } = useApp();
+  const { smsTemplates, smsLogs, updateSmsTemplate, sendMockSms, showToast } = useApp();
 
   const [activeTab, setActiveTab] = useState<'logs' | 'templates'>('logs');
   const [selectedTemplate, setSelectedTemplate] = useState<SmsTemplate>(smsTemplates[0]);
@@ -76,6 +76,21 @@ export const SmsAlerts: React.FC = () => {
       title: 'SMS Template Updated',
       message: `Template "${selectedTemplate.name}" updated with DLT character count check.`,
     });
+  };
+
+    const handleExportCSV = () => {
+    const headers = ['Recipient Name', 'Phone', 'Template', 'Trigger Event', 'Message', 'Status', 'Sent At'];
+    const rows = filteredSmsLogs.map((l) => [
+      l.recipientName,
+      l.recipientPhone,
+      l.templateName,
+      l.triggerEvent,
+      l.message,
+      l.status,
+      l.sentAt,
+    ]);
+    exportToCSV('DLT_SMS_Delivery_Registry', headers, rows);
+    showToast({ type: 'success', title: 'SMS Delivery Logs Exported' });
   };
 
   const handleTestSend = () => {
