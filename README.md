@@ -1,6 +1,6 @@
-# Shree Balaji Travels - Bus Operating Business Admin (Client Demo)
+# Deepak Raj Travels - Bus Operating Business Admin (Client Demo)
 
-A comprehensive, clickable, front-end-only management web app built for an Indian inter-state bus operating business (**Shree Balaji Travels, Delhi**).
+A comprehensive, clickable, front-end-only management web app built for an Indian inter-state bus operating business (**Deepak Raj Travels, Delhi**).
 
 ---
 

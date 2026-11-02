@@ -26,7 +26,7 @@ export const Login: React.FC = () => {
             <Bus className="w-8 h-8 stroke-[2.5]" />
           </div>
           <h1 className="text-2xl font-black tracking-tight text-white">
-            Shree Balaji Travels
+            Deepak Raj Travels
           </h1>
           <p className="text-xs text-amber-400 font-semibold mt-0.5">
             Inter-State Bus Operating Business Admin

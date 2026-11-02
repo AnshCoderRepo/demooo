@@ -19,7 +19,7 @@ export const SalarySlipModal: React.FC = () => {
       worker.name,
       worker.phone,
       'Salary Slip Dispatched',
-      `Dear ${worker.name}, your salary slip for ${month} has been finalized. Net Payable: ${formatINR(netPayable)}. Paid via bank/cash. - Shree Balaji Travels.`,
+      `Dear ${worker.name}, your salary slip for ${month} has been finalized. Net Payable: ${formatINR(netPayable)}. Paid via bank/cash. - Deepak Raj Travels.`,
       'Salary Slip Send'
     );
     showToast({
@@ -155,7 +155,7 @@ export const SalarySlipModal: React.FC = () => {
               <p className="text-[10px] text-slate-400">Acknowledged receipt</p>
             </div>
             <div className="text-right">
-              <p className="font-serif italic text-slate-800 font-bold">For Shree Balaji Travels</p>
+              <p className="font-serif italic text-slate-800 font-bold">For Deepak Raj Travels</p>
               <p className="text-[10px] uppercase text-slate-400">Authorised Signatory</p>
             </div>
           </div>

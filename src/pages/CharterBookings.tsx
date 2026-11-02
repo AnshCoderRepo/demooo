@@ -556,7 +556,7 @@ export const CharterBookings: React.FC = () => {
                             b.customerName,
                             b.phone,
                             'Charter Booking Confirmation',
-                            `Dear ${b.customerName}, your booking #${b.bookingNumber} (${b.bookingType}) is ${b.status} with Shree Balaji Travels. Bus: ${b.assignedBuses[0]?.busNumber || 'Assigned soon'}. Advance: ${formatINR(b.advancePaid)}. Balance: ${formatINR(b.balanceDue)}.`,
+                            `Dear ${b.customerName}, your booking #${b.bookingNumber} (${b.bookingType}) is ${b.status} with Deepak Raj Travels. Bus: ${b.assignedBuses[0]?.busNumber || 'Assigned soon'}. Advance: ${formatINR(b.advancePaid)}. Balance: ${formatINR(b.balanceDue)}.`,
                             'Charter Action'
                           );
                           showToast({
@@ -1152,7 +1152,7 @@ export const CharterBookings: React.FC = () => {
 
             <div className="space-y-4 text-xs">
               <div className="text-center border-b pb-3">
-                <h2 className="text-lg font-black uppercase text-slate-950">Shree Balaji Travels</h2>
+                <h2 className="text-lg font-black uppercase text-slate-950">Deepak Raj Travels</h2>
                 <p className="text-[11px] text-slate-600">Shop 14, Fatehpuri Chowk, Near Kashmere Gate ISBT, Delhi</p>
                 <p className="text-[11px] font-mono font-bold mt-1">CHARTER QUOTATION #{previewBooking.bookingNumber}</p>
               </div>

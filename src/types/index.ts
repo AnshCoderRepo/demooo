@@ -1,4 +1,4 @@
-// Core Data Models for Shree Balaji Travels Admin Demo
+// Core Data Models for Deepak Raj Travels Admin Demo
 
 export type Language = 'en' | 'hi';
 

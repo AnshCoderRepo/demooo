@@ -114,7 +114,7 @@ export const Navbar: React.FC<{ onToggleMobileMenu: () => void; isMobileMenuOpen
                 className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center text-amber-400 font-bold text-xs">
-                  RS
+                  DR
                 </div>
                 <div className="hidden md:block text-left">
                   <div className="text-xs font-semibold text-slate-100">{currentUser.name}</div>

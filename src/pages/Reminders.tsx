@@ -40,7 +40,7 @@ export const Reminders: React.FC = () => {
       'Primary Operations Alert',
       '+91 98112 34567',
       'System Reminder Alert',
-      `Alert [${r.title}]: ${r.description}. Due Date: ${formatDate(r.dueDate)}. - Shree Balaji Travels Admin.`,
+      `Alert [${r.title}]: ${r.description}. Due Date: ${formatDate(r.dueDate)}. - Deepak Raj Travels Admin.`,
       `Reminder: ${r.type}`
     );
     showToast({

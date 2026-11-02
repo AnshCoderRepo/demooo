@@ -33,7 +33,7 @@ export const SmsAlerts: React.FC = () => {
       .replace(/{seat_numbers}/g, 'L5')
       .replace(/{amount}/g, '₹35,000')
       .replace(/{payment_mode}/g, 'UPI')
-      .replace(/{reference}/g, 'UPI/392019/BALAJI')
+      .replace(/{reference}/g, 'UPI/392019/DPKRAJ')
       .replace(/{purpose}/g, 'Charter Advance')
       .replace(/{worker_name}/g, 'Surender Singh')
       .replace(/{month}/g, 'October 2026')
@@ -125,7 +125,7 @@ export const SmsAlerts: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Sender Header ID: <strong className="font-mono text-amber-400">BALAJI (1407162910)</strong> • TRAI / Jio DLT Approved
+              Sender Header ID: <strong className="font-mono text-amber-400">DPKRAJ (1407162910)</strong> • TRAI / Jio DLT Approved
             </p>
           </div>
         </div>
@@ -287,7 +287,7 @@ export const SmsAlerts: React.FC = () => {
               <div className="w-20 h-3 rounded-full bg-slate-800 mx-auto mb-4" />
 
               <div className="text-center text-[10px] text-slate-400 mb-3">
-                <span className="font-bold text-amber-400">VM-BALAJI</span>
+                <span className="font-bold text-amber-400">VM-DPKRAJ</span>
                 <div>Today, 08:30 PM</div>
               </div>
 

@@ -20,7 +20,7 @@ export const InvoiceModal: React.FC = () => {
       inv.customerName,
       inv.customerPhone,
       'Invoice Shared',
-      `Shree Balaji Travels: ${inv.type} #${inv.invoiceNumber} for ${formatINR(Math.abs(inv.grandTotal))} dated ${formatDate(inv.date)} is ready. Download link sent to your registered contact.`,
+      `Deepak Raj Travels: ${inv.type} #${inv.invoiceNumber} for ${formatINR(Math.abs(inv.grandTotal))} dated ${formatDate(inv.date)} is ready. Download link sent to your registered contact.`,
       'Invoice Modal'
     );
     showToast({
@@ -227,7 +227,7 @@ export const InvoiceModal: React.FC = () => {
               <span>Valid GST Compliant Invoice</span>
             </div>
             <div className="text-right">
-              <p className="font-serif italic text-slate-800 font-bold">For Shree Balaji Travels</p>
+              <p className="font-serif italic text-slate-800 font-bold">For Deepak Raj Travels</p>
               <p className="text-[10px] uppercase text-slate-400">Authorised Signatory</p>
             </div>
           </div>

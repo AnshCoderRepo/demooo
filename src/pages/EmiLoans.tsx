@@ -12,7 +12,7 @@ export const EmiLoans: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'loans' | 'purchaseRecords'>('loans');
   const [payModalEmi, setPayModalEmi] = useState<LoanEMI | null>(null);
-  const [payReference, setPayReference] = useState('ACH/SBI/20261102/BALAJI');
+  const [payReference, setPayReference] = useState('ACH/SBI/20261102/DPKRAJ');
 
   // Find EMIs due within 5 days (5 Nov is in 3 days!)
   const emiDueSoon = emis.filter((e) => e.status === 'active' && e.dueDayOfMonth >= 1 && e.dueDayOfMonth <= 7);

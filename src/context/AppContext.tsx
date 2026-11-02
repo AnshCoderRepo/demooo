@@ -15,7 +15,7 @@ import {
 import { TRANSLATIONS } from '../utils/formatters';
 import confetti from 'canvas-confetti';
 
-const STORAGE_KEY = 'BALAJI_BUS_ADMIN_DATA_V1';
+const STORAGE_KEY = 'DEEPAK_RAJ_BUS_ADMIN_DATA_V2';
 
 export interface ToastMessage {
   id: string;
@@ -291,7 +291,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const entry: ChangeHistoryEntry = {
       id: `hist-${Date.now()}`,
       timestamp: '2026-11-02 21:55',
-      userName: 'Ramesh Sharma (Owner)',
+      userName: 'Deepak Raj (Owner)',
       entityType,
       entityId,
       entityTitle,
@@ -338,7 +338,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const currentUser = {
-    name: 'Ramesh Sharma',
+    name: 'Deepak Raj',
     role: 'Owner (Admin)',
     email: 'owner@demo.com',
     phone: '+91 98112 34567',
@@ -435,7 +435,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       amount: newTicket.grandTotal,
       type: 'credit',
       mode: 'UPI',
-      referenceUtr: `UPI/${Date.now().toString().slice(-8)}/BALAJI`,
+      referenceUtr: `UPI/${Date.now().toString().slice(-8)}/DPKRAJ`,
       customerName: newTicket.customerName,
       category: 'Route Ticket',
       linkedId: newId,
@@ -452,7 +452,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       newTicket.customerName,
       newTicket.customerPhone,
       'Route Ticket Issued',
-      `Shree Balaji Travels: Ticket #${newTicket.ticketNumber} confirmed for ${newTicket.routeName}. Travel Date: ${newTicket.travelDate}. Seat(s): ${newTicket.passengers.map(p => p.seatNumber).join(', ')}. Total: ₹${newTicket.grandTotal}.`,
+      `Deepak Raj Travels: Ticket #${newTicket.ticketNumber} confirmed for ${newTicket.routeName}. Travel Date: ${newTicket.travelDate}. Seat(s): ${newTicket.passengers.map(p => p.seatNumber).join(', ')}. Total: ₹${newTicket.grandTotal}.`,
       'Route Ticket Booking'
     );
 
@@ -616,7 +616,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       newPay.customerName,
       '+91 98111 20491',
       'Payment Receipt Confirmation',
-      `Thank you ${newPay.customerName}! Payment of ₹${newPay.amount.toLocaleString('en-IN')} received via ${newPay.mode} (Ref: ${newPay.referenceUtr}). - Shree Balaji Travels.`,
+      `Thank you ${newPay.customerName}! Payment of ₹${newPay.amount.toLocaleString('en-IN')} received via ${newPay.mode} (Ref: ${newPay.referenceUtr}). - Deepak Raj Travels.`,
       'Payment Received'
     );
 
@@ -725,7 +725,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       worker.name,
       worker.phone,
       'Salary Disbursed to Worker',
-      `Dear ${worker.name}, your net salary of ₹${amount.toLocaleString('en-IN')} for ${month} has been credited via ${paymentMode}. - Shree Balaji Travels.`,
+      `Dear ${worker.name}, your net salary of ₹${amount.toLocaleString('en-IN')} for ${month} has been credited via ${paymentMode}. - Deepak Raj Travels.`,
       'Payroll Disbursement'
     );
 

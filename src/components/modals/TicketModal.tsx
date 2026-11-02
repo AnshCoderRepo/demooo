@@ -21,7 +21,7 @@ export const TicketModal: React.FC = () => {
       ticket.customerName,
       ticket.customerPhone,
       'Route Ticket Issued',
-      `Shree Balaji Travels: Ticket #${ticket.ticketNumber} confirmed for ${ticket.routeName}. Travel Date: ${formatDate(ticket.travelDate)}. Seats: ${ticket.passengers.map(p => p.seatNumber).join(', ')}. Total: ${formatINR(ticket.grandTotal)}.`,
+      `Deepak Raj Travels: Ticket #${ticket.ticketNumber} confirmed for ${ticket.routeName}. Travel Date: ${formatDate(ticket.travelDate)}. Seats: ${ticket.passengers.map(p => p.seatNumber).join(', ')}. Total: ${formatINR(ticket.grandTotal)}.`,
       'WhatsApp Share'
     );
     showToast({
@@ -208,7 +208,7 @@ export const TicketModal: React.FC = () => {
               <span>Digitally Verified E-Ticket</span>
             </div>
             <div className="text-right">
-              <p className="font-serif italic text-slate-700 font-bold">For Shree Balaji Travels</p>
+              <p className="font-serif italic text-slate-700 font-bold">For Deepak Raj Travels</p>
               <p className="text-[9px] uppercase tracking-wider text-slate-400">Authorised Signatory</p>
             </div>
           </div>

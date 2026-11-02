@@ -29,7 +29,7 @@ export const PaymentsLedger: React.FC = () => {
     amount: 15000,
     type: 'credit' as 'credit' | 'debit',
     mode: 'UPI' as 'Cash' | 'UPI' | 'Bank' | 'Card',
-    referenceUtr: 'UPI/20261102/BALAJI',
+    referenceUtr: 'UPI/20261102/DPKRAJ',
     customerId: '',
     customerName: 'Rajesh Verma (Verma Tent House)',
     category: 'Charter Advance' as PaymentRecord['category'],
@@ -428,7 +428,7 @@ export const PaymentsLedger: React.FC = () => {
 
             <div className="space-y-4 text-xs">
               <div className="text-center border-b pb-3">
-                <h3 className="font-black text-lg uppercase text-slate-950">Shree Balaji Travels</h3>
+                <h3 className="font-black text-lg uppercase text-slate-950">Deepak Raj Travels</h3>
                 <p className="text-slate-600 text-[11px]">Shop 14, Kashmere Gate ISBT, Delhi</p>
                 <p className="font-mono font-bold text-xs mt-1">RECEIPT #{previewReceipt.receiptNumber}</p>
               </div>

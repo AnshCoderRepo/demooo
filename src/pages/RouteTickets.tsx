@@ -392,7 +392,7 @@ export const RouteTickets: React.FC = () => {
                                 tk.customerName,
                                 tk.customerPhone,
                                 'Route Ticket Issued',
-                                `Shree Balaji Travels: Ticket #${tk.ticketNumber} confirmed. Seats: ${tk.passengers.map(p => p.seatNumber).join(', ')}. Amount: ${formatINR(tk.grandTotal)}. Dep: ${tk.departureTime}.`,
+                                `Deepak Raj Travels: Ticket #${tk.ticketNumber} confirmed. Seats: ${tk.passengers.map(p => p.seatNumber).join(', ')}. Amount: ${formatINR(tk.grandTotal)}. Dep: ${tk.departureTime}.`,
                                 'Ticket Resend'
                               );
                               showToast({ type: 'success', title: 'Ticket Resent via SMS & WhatsApp' });

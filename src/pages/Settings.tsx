@@ -384,7 +384,7 @@ export const Settings: React.FC = () => {
             {/* Signatory */}
             <div className="mt-3 flex items-center justify-between text-[9px] text-slate-400">
               <span>SCAN QR TO BOARD</span>
-              <span className="italic font-bold text-slate-700">For Shree Balaji Travels</span>
+              <span className="italic font-bold text-slate-700">For Deepak Raj Travels</span>
             </div>
           </div>
         </div>
