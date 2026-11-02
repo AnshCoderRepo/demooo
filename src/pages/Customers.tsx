@@ -4,7 +4,7 @@ import { Customer } from '../types';
 import { formatINR, formatDate, exportToCSV, INDIAN_STATES } from '../utils/formatters';
 import { 
   Users, Search, Plus, Download, Edit, Phone, MapPin, 
-  Clock, ArrowRight, Eye, History, X, CheckCircle, AlertCircle
+  Clock, ArrowRight, Eye, History, X, CheckCircle, AlertCircle, Filter, RotateCcw
 } from 'lucide-react';
 
 export const Customers: React.FC = () => {
@@ -22,6 +22,9 @@ export const Customers: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCust, setEditingCust] = useState<Customer | null>(null);
+  const [stateFilter, setStateFilter] = useState<string>('all');
+  const [taxTypeFilter, setTaxTypeFilter] = useState<'all' | 'b2b' | 'b2c'>('all');
+  const [balanceFilter, setBalanceFilter] = useState<'all' | 'hasDue' | 'zeroDue'>('all');
 
   const [formData, setFormData] = useState({
     name: '',

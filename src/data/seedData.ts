@@ -635,7 +635,7 @@ export const INITIAL_CUSTOMERS: Customer[] = [
 export const INITIAL_CHARTER_BOOKINGS: CharterBooking[] = [
   {
     id: 'ch-1',
-    bookingNumber: 'SB-CH-1021',
+    bookingNumber: 'DR-CH-1021',
     customerId: 'cust-1',
     customerName: 'Rajesh Verma (Verma Tent House)',
     phone: '+91 98111 20491',
@@ -684,7 +684,7 @@ export const INITIAL_CHARTER_BOOKINGS: CharterBooking[] = [
   },
   {
     id: 'ch-2',
-    bookingNumber: 'SB-CH-1022',
+    bookingNumber: 'DR-CH-1022',
     customerId: 'cust-3',
     customerName: 'DAV Public School (Noida Sec 56)',
     phone: '+91 98188 33410',
@@ -734,7 +734,7 @@ export const INITIAL_CHARTER_BOOKINGS: CharterBooking[] = [
   },
   {
     id: 'ch-3',
-    bookingNumber: 'SB-CH-1023',
+    bookingNumber: 'DR-CH-1023',
     customerId: 'cust-4',
     customerName: 'Pandit Ramakant Shastri (Tirth Yatra Samiti)',
     phone: '+91 98991 77210',
@@ -771,7 +771,7 @@ export const INITIAL_CHARTER_BOOKINGS: CharterBooking[] = [
   },
   {
     id: 'ch-4',
-    bookingNumber: 'SB-CH-1024',
+    bookingNumber: 'DR-CH-1024',
     customerId: 'cust-5',
     customerName: 'Bihar State Tourism Dev. Corp.',
     phone: '+91 94318 00921',
@@ -819,7 +819,7 @@ export const INITIAL_CHARTER_BOOKINGS: CharterBooking[] = [
   },
   {
     id: 'ch-5',
-    bookingNumber: 'SB-CH-1025',
+    bookingNumber: 'DR-CH-1025',
     customerId: 'cust-6',
     customerName: 'Suresh Singhania',
     phone: '+91 98102 33491',
@@ -863,7 +863,7 @@ export const INITIAL_CHARTER_BOOKINGS: CharterBooking[] = [
   },
   {
     id: 'ch-6',
-    bookingNumber: 'SB-CH-1026',
+    bookingNumber: 'DR-CH-1026',
     customerId: 'cust-2',
     customerName: 'Anita Devi & Sons (Muzaffarpur)',
     phone: '+91 94312 99481',
@@ -900,7 +900,7 @@ export const INITIAL_CHARTER_BOOKINGS: CharterBooking[] = [
   },
   {
     id: 'ch-7',
-    bookingNumber: 'SB-CH-1020',
+    bookingNumber: 'DR-CH-1020',
     customerId: 'cust-10',
     customerName: 'Subhash Chandra Gupta',
     phone: '+91 98114 99018',
@@ -944,7 +944,7 @@ export const INITIAL_CHARTER_BOOKINGS: CharterBooking[] = [
   },
   {
     id: 'ch-8',
-    bookingNumber: 'SB-CH-1019',
+    bookingNumber: 'DR-CH-1019',
     customerId: 'cust-12',
     customerName: 'Pradeep Goyal (Goyal Steel)',
     phone: '+91 98100 44321',
@@ -981,7 +981,7 @@ export const INITIAL_CHARTER_BOOKINGS: CharterBooking[] = [
   },
   {
     id: 'ch-9',
-    bookingNumber: 'SB-CH-1027',
+    bookingNumber: 'DR-CH-1027',
     customerId: 'cust-7',
     customerName: 'Manoj Bajpayee (Patna Sangam Tour)',
     phone: '+91 99340 11928',
@@ -1018,7 +1018,7 @@ export const INITIAL_CHARTER_BOOKINGS: CharterBooking[] = [
   },
   {
     id: 'ch-10',
-    bookingNumber: 'SB-CH-1028',
+    bookingNumber: 'DR-CH-1028',
     customerId: 'cust-11',
     customerName: 'Varanasi Sanskrit Vidyapeeth',
     phone: '+91 94500 88219',
@@ -1059,7 +1059,7 @@ export const INITIAL_CHARTER_BOOKINGS: CharterBooking[] = [
   },
   {
     id: 'ch-11',
-    bookingNumber: 'SB-CH-1029',
+    bookingNumber: 'DR-CH-1029',
     customerId: 'cust-1',
     customerName: 'Rajesh Verma (Verma Tent House)',
     phone: '+91 98111 20491',
@@ -1103,7 +1103,7 @@ export const INITIAL_CHARTER_BOOKINGS: CharterBooking[] = [
   },
   {
     id: 'ch-12',
-    bookingNumber: 'SB-CH-1030',
+    bookingNumber: 'DR-CH-1030',
     customerId: 'cust-8',
     customerName: 'Siliguri Commercial Traders Assn.',
     phone: '+91 94340 77102',
@@ -1144,7 +1144,7 @@ export const INITIAL_CHARTER_BOOKINGS: CharterBooking[] = [
   },
   {
     id: 'ch-13',
-    bookingNumber: 'SB-CH-1031',
+    bookingNumber: 'DR-CH-1031',
     customerId: 'cust-9',
     customerName: 'Dr. Alok Nath Mukherjee',
     phone: '+91 98301 22910',
@@ -1181,7 +1181,7 @@ export const INITIAL_CHARTER_BOOKINGS: CharterBooking[] = [
   },
   {
     id: 'ch-14',
-    bookingNumber: 'SB-CH-1032',
+    bookingNumber: 'DR-CH-1032',
     customerId: 'cust-4',
     customerName: 'Pandit Ramakant Shastri (Tirth Yatra Samiti)',
     phone: '+91 98991 77210',
@@ -1225,7 +1225,7 @@ export const INITIAL_CHARTER_BOOKINGS: CharterBooking[] = [
   },
   {
     id: 'ch-15',
-    bookingNumber: 'SB-CH-1033',
+    bookingNumber: 'DR-CH-1033',
     customerId: 'cust-6',
     customerName: 'Suresh Singhania',
     phone: '+91 98102 33491',
@@ -1314,7 +1314,7 @@ export const INITIAL_ROUTES: Route[] = [
 export const INITIAL_TICKETS: RouteTicket[] = [
   {
     id: 'tk-1',
-    ticketNumber: 'SB-TK-5081',
+    ticketNumber: 'DR-TK-5081',
     routeId: 'route-1',
     routeName: 'Delhi ↔ Siliguri',
     busId: 'bus-1',
@@ -1353,7 +1353,7 @@ export const INITIAL_TICKETS: RouteTicket[] = [
   },
   {
     id: 'tk-2',
-    ticketNumber: 'SB-TK-5082',
+    ticketNumber: 'DR-TK-5082',
     routeId: 'route-1',
     routeName: 'Delhi ↔ Siliguri',
     busId: 'bus-1',
@@ -1382,7 +1382,7 @@ export const INITIAL_TICKETS: RouteTicket[] = [
   },
   {
     id: 'tk-3',
-    ticketNumber: 'SB-TK-5083',
+    ticketNumber: 'DR-TK-5083',
     routeId: 'route-2',
     routeName: 'Delhi ↔ Patna / Gaya',
     busId: 'bus-2',
@@ -1411,7 +1411,7 @@ export const INITIAL_TICKETS: RouteTicket[] = [
   },
   {
     id: 'tk-4',
-    ticketNumber: 'SB-TK-5084',
+    ticketNumber: 'DR-TK-5084',
     routeId: 'route-2',
     routeName: 'Delhi ↔ Patna / Gaya',
     busId: 'bus-2',
@@ -1442,12 +1442,12 @@ export const INITIAL_TICKETS: RouteTicket[] = [
       refundPercent: 90,
       refundAmount: 1096,
       cancellationCharge: 122,
-      creditNoteNumber: 'SB-CR-2026-004',
+      creditNoteNumber: 'DR-CR-2026-004',
     },
   },
   {
     id: 'tk-5',
-    ticketNumber: 'SB-TK-5085',
+    ticketNumber: 'DR-TK-5085',
     routeId: 'route-1',
     routeName: 'Delhi ↔ Siliguri',
     busId: 'bus-6',
@@ -1488,7 +1488,7 @@ for (let i = 6; i <= 40; i++) {
 
   INITIAL_TICKETS.push({
     id: `tk-${i}`,
-    ticketNumber: `SB-TK-${5080 + i}`,
+    ticketNumber: `DR-TK-${5080 + i}`,
     routeId: isSiliguri ? 'route-1' : 'route-2',
     routeName: isSiliguri ? 'Delhi ↔ Siliguri' : 'Delhi ↔ Patna / Gaya',
     busId: isSiliguri ? (i % 4 === 0 ? 'bus-1' : 'bus-6') : 'bus-2',
@@ -1520,7 +1520,7 @@ for (let i = 6; i <= 40; i++) {
 export const INITIAL_PAYMENTS: PaymentRecord[] = [
   {
     id: 'pay-1',
-    receiptNumber: 'SB-REC-101',
+    receiptNumber: 'DR-REC-101',
     date: '2026-11-02',
     amount: 35000,
     type: 'credit',
@@ -1535,7 +1535,7 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
   },
   {
     id: 'pay-2',
-    receiptNumber: 'SB-REC-102',
+    receiptNumber: 'DR-REC-102',
     date: '2026-11-02',
     amount: 1942.5,
     type: 'credit',
@@ -1549,7 +1549,7 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
   },
   {
     id: 'pay-3',
-    receiptNumber: 'SB-REC-103',
+    receiptNumber: 'DR-REC-103',
     date: '2026-11-01',
     amount: 25000,
     type: 'credit',
@@ -1564,7 +1564,7 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
   },
   {
     id: 'pay-4',
-    receiptNumber: 'SB-REC-104',
+    receiptNumber: 'DR-REC-104',
     date: '2026-11-01',
     amount: 1449,
     type: 'credit',
@@ -1578,7 +1578,7 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
   },
   {
     id: 'pay-5',
-    receiptNumber: 'SB-REC-105',
+    receiptNumber: 'DR-REC-105',
     date: '2026-10-31',
     amount: 40000,
     type: 'credit',
@@ -1593,7 +1593,7 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
   },
   {
     id: 'pay-6',
-    receiptNumber: 'SB-REC-106',
+    receiptNumber: 'DR-REC-106',
     date: '2026-10-31',
     amount: 22000,
     type: 'debit',
@@ -1607,7 +1607,7 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
   },
   {
     id: 'pay-7',
-    receiptNumber: 'SB-REC-107',
+    receiptNumber: 'DR-REC-107',
     date: '2026-10-31',
     amount: 32000,
     type: 'debit',
@@ -1621,7 +1621,7 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
   },
   {
     id: 'pay-8',
-    receiptNumber: 'SB-REC-108',
+    receiptNumber: 'DR-REC-108',
     date: '2026-10-30',
     amount: 50000,
     type: 'credit',
@@ -1636,7 +1636,7 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
   },
   {
     id: 'pay-9',
-    receiptNumber: 'SB-REC-109',
+    receiptNumber: 'DR-REC-109',
     date: '2026-10-29',
     amount: 82740,
     type: 'credit',
@@ -1651,7 +1651,7 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
   },
   {
     id: 'pay-10',
-    receiptNumber: 'SB-REC-110',
+    receiptNumber: 'DR-REC-110',
     date: '2026-10-28',
     amount: 17640,
     type: 'credit',
@@ -1670,7 +1670,7 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
 for (let j = 11; j <= 30; j++) {
   INITIAL_PAYMENTS.push({
     id: `pay-${j}`,
-    receiptNumber: `SB-REC-${100 + j}`,
+    receiptNumber: `DR-REC-${100 + j}`,
     date: j <= 18 ? '2026-10-27' : (j <= 25 ? '2026-10-24' : '2026-10-20'),
     amount: (j % 3 === 0 ? 15000 : (j % 2 === 0 ? 3885 : 1850)),
     type: 'credit',
@@ -1920,7 +1920,7 @@ export const INITIAL_REMINDERS: Reminder[] = [
     id: 'rem-4',
     type: 'tomorrow_trip',
     title: "Tomorrow's School Charter: DAV Public School",
-    description: 'Trip SB-CH-1022 starts at 07:30 AM tomorrow. Bus DL 04 EF 7812 assigned with driver Balwant Gurjar.',
+    description: 'Trip DR-CH-1022 starts at 07:30 AM tomorrow. Bus DL 04 EF 7812 assigned with driver Balwant Gurjar.',
     dueDate: '2026-11-03',
     urgency: 'medium',
     status: 'pending',
@@ -1997,7 +1997,7 @@ export const INITIAL_SMS_LOGS: SmsLog[] = [
     recipientName: 'Priya Sharma',
     recipientPhone: '+91 98103 44910',
     templateName: 'Route Ticket Issued',
-    message: 'Deepak Raj Travels: Ticket #SB-TK-5085 confirmed for Delhi ↔ Siliguri. Travel Date: 02 Nov 2026, Dep: 17:30. Seat(s): L5. Total Fare: ₹1,942. Boarding: Noida City Center.',
+    message: 'Deepak Raj Travels: Ticket #DR-TK-5085 confirmed for Delhi ↔ Siliguri. Travel Date: 02 Nov 2026, Dep: 17:30. Seat(s): L5. Total Fare: ₹1,942. Boarding: Noida City Center.',
     status: 'Delivered',
     triggerEvent: 'Ticket Booking Screen',
   },
@@ -2017,7 +2017,7 @@ export const INITIAL_SMS_LOGS: SmsLog[] = [
     recipientName: 'Surender Singh Yadav',
     recipientPhone: '+91 98711 22334',
     templateName: 'Trip Assignment to Driver',
-    message: 'Duty Alert: Surender, you are assigned Bus DL 01 AB 4090 for trip #SB-CH-1021 (Shadi). Reporting time: 13:00 at Karol Bagh.',
+    message: 'Duty Alert: Surender, you are assigned Bus DL 01 AB 4090 for trip #DR-CH-1021 (Shadi). Reporting time: 13:00 at Karol Bagh.',
     status: 'Delivered',
     triggerEvent: 'Driver Assignment',
   },
@@ -2027,7 +2027,7 @@ export const INITIAL_SMS_LOGS: SmsLog[] = [
     recipientName: 'Amitabh Sen',
     recipientPhone: '+91 98310 44219',
     templateName: 'Route Ticket Issued',
-    message: 'Deepak Raj Travels: Ticket #SB-TK-5081 confirmed for Delhi ↔ Siliguri. Seats: L1, L2. Amount: ₹3,885.',
+    message: 'Deepak Raj Travels: Ticket #DR-TK-5081 confirmed for Delhi ↔ Siliguri. Seats: L1, L2. Amount: ₹3,885.',
     status: 'Delivered',
     triggerEvent: 'Ticket Booking Screen',
   },
@@ -2047,7 +2047,7 @@ export const INITIAL_SMS_LOGS: SmsLog[] = [
     recipientName: 'Sunil Kumar Gupta',
     recipientPhone: '+91 98112 99019',
     templateName: 'Cancellation & Refund',
-    message: 'Deepak Raj Travels: Ticket #SB-TK-5084 has been cancelled. Refund of ₹1,096 credited via Credit Note #SB-CR-2026-004.',
+    message: 'Deepak Raj Travels: Ticket #DR-TK-5084 has been cancelled. Refund of ₹1,096 credited via Credit Note #DR-CR-2026-004.',
     status: 'Delivered',
     triggerEvent: 'Ticket Cancellation',
   },
@@ -2056,7 +2056,7 @@ export const INITIAL_SMS_LOGS: SmsLog[] = [
 export const INITIAL_GST_INVOICES: GSTInvoice[] = [
   {
     id: 'inv-1',
-    invoiceNumber: 'SB-INV-2026-041',
+    invoiceNumber: 'DR-INV-2026-041',
     date: '2026-11-02',
     customerName: 'Rajesh Verma (Verma Tent House)',
     customerPhone: '+91 98111 20491',
@@ -2088,7 +2088,7 @@ export const INITIAL_GST_INVOICES: GSTInvoice[] = [
   },
   {
     id: 'inv-2',
-    invoiceNumber: 'SB-INV-2026-042',
+    invoiceNumber: 'DR-INV-2026-042',
     date: '2026-10-28',
     customerName: 'DAV Public School',
     customerPhone: '+91 98188 33410',
@@ -2120,7 +2120,7 @@ export const INITIAL_GST_INVOICES: GSTInvoice[] = [
   },
   {
     id: 'inv-3',
-    invoiceNumber: 'SB-CR-2026-004',
+    invoiceNumber: 'DR-CR-2026-004',
     date: '2026-11-01',
     customerName: 'Sunil Kumar Gupta',
     customerPhone: '+91 98112 99019',
@@ -2131,7 +2131,7 @@ export const INITIAL_GST_INVOICES: GSTInvoice[] = [
     type: 'Credit Note',
     items: [
       {
-        description: 'Refund for Cancelled Ticket #SB-TK-5084 (Delhi-Varanasi)',
+        description: 'Refund for Cancelled Ticket #DR-TK-5084 (Delhi-Varanasi)',
         sacHsn: '9964',
         taxableAmount: -1044,
         gstRate: 5,
@@ -2147,7 +2147,7 @@ export const INITIAL_GST_INVOICES: GSTInvoice[] = [
     totalIgst: 0,
     totalTax: -52,
     grandTotal: -1096,
-    originalInvoiceNumber: 'SB-INV-2026-039',
+    originalInvoiceNumber: 'DR-INV-2026-039',
     linkedBookingOrTicketId: 'tk-4',
   },
 ];
@@ -2159,7 +2159,7 @@ export const INITIAL_CHANGE_HISTORY: ChangeHistoryEntry[] = [
     userName: 'Ramesh Sharma (Owner)',
     entityType: 'Charter Booking',
     entityId: 'ch-1',
-    entityTitle: 'SB-CH-1021 (Rajesh Verma Shadi)',
+    entityTitle: 'DR-CH-1021 (Rajesh Verma Shadi)',
     action: 'Status Changed',
     fieldChanged: 'status',
     oldValue: 'Quoted',
@@ -2185,12 +2185,12 @@ export const INITIAL_CHANGE_HISTORY: ChangeHistoryEntry[] = [
     userName: 'Ramesh Sharma (Owner)',
     entityType: 'Route Ticket',
     entityId: 'tk-4',
-    entityTitle: 'SB-TK-5084 (Sunil Kumar Gupta)',
+    entityTitle: 'DR-TK-5084 (Sunil Kumar Gupta)',
     action: 'Cancelled',
     fieldChanged: 'status',
     oldValue: 'Confirmed',
     newValue: 'Cancelled',
-    reason: 'Passenger requested cancellation due to family emergency. Credit Note SB-CR-2026-004 issued.',
+    reason: 'Passenger requested cancellation due to family emergency. Credit Note DR-CR-2026-004 issued.',
   },
   {
     id: 'hist-4',
@@ -2211,7 +2211,7 @@ export const INITIAL_CHANGE_HISTORY: ChangeHistoryEntry[] = [
     userName: 'Ramesh Sharma (Owner)',
     entityType: 'Charter Booking',
     entityId: 'ch-5',
-    entityTitle: 'SB-CH-1025 (Suresh Singhania Vivah)',
+    entityTitle: 'DR-CH-1025 (Suresh Singhania Vivah)',
     action: 'Edited',
     fieldChanged: 'passengers',
     oldValue: '22',
@@ -2237,7 +2237,7 @@ export const INITIAL_CHANGE_HISTORY: ChangeHistoryEntry[] = [
     userName: 'Ramesh Sharma (Owner)',
     entityType: 'Charter Booking',
     entityId: 'ch-2',
-    entityTitle: 'SB-CH-1022 (DAV Public School)',
+    entityTitle: 'DR-CH-1022 (DAV Public School)',
     action: 'Created',
     fieldChanged: 'all',
     oldValue: 'None',

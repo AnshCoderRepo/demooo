@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { CharterBooking, CharterBookingType, CharterBookingStatus, BusType } from '../types';
-import { formatINR, formatDate, formatDateTime, exportToCSV, checkDateOverlap, TODAY_STR } from '../utils/formatters';
+import { formatINR, formatDate, formatDateTime, exportToCSV, checkDateOverlap, TODAY_STR, isDateInFilter, DateFilterOption } from '../utils/formatters';
 import { 
   BusFront, Plus, Search, Filter, Download, AlertCircle, 
   CheckCircle, Clock, ShieldAlert, ArrowRight, Printer, 
-  MessageSquare, User, Calendar, MapPin, X, Edit, Eye, History
+  MessageSquare, User, Calendar, MapPin, X, Edit, Eye, History, RotateCcw
 } from 'lucide-react';
 import { WarningModal } from '../components/modals/WarningModal';
 
@@ -26,6 +26,12 @@ export const CharterBookings: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<DateFilterOption>('all');
+  const [customStart, setCustomStart] = useState<string>('');
+  const [customEnd, setCustomEnd] = useState<string>('');
+  const [busFilter, setBusFilter] = useState<string>('all');
+  const [driverFilter, setDriverFilter] = useState<string>('all');
+  const [paymentFilter, setPaymentFilter] = useState<string>('all');
 
   // Modal states
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
@@ -111,8 +117,37 @@ export const CharterBookings: React.FC = () => {
       b.drop.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || b.status === statusFilter;
     const matchesType = typeFilter === 'all' || b.bookingType === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
+    const matchesDate = isDateInFilter(b.pickupDateTime, dateFilter, customStart, customEnd);
+    const matchesBus = busFilter === 'all' || b.assignedBuses.some((ab) => ab.busId === busFilter);
+    const matchesDriver = driverFilter === 'all' || b.assignedBuses.some((ab) => ab.driverId === driverFilter);
+    const matchesPayment = 
+      paymentFilter === 'all' ? true :
+      paymentFilter === 'fullyPaid' ? b.balanceDue === 0 :
+      paymentFilter === 'partial' ? (b.advancePaid > 0 && b.balanceDue > 0) :
+      b.advancePaid === 0;
+    return matchesSearch && matchesStatus && matchesType && matchesDate && matchesBus && matchesDriver && matchesPayment;
   });
+
+  const isAnyFilterActive = 
+    searchQuery !== '' || 
+    statusFilter !== 'all' || 
+    typeFilter !== 'all' || 
+    dateFilter !== 'all' || 
+    busFilter !== 'all' || 
+    driverFilter !== 'all' || 
+    paymentFilter !== 'all';
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setTypeFilter('all');
+    setDateFilter('all');
+    setCustomStart('');
+    setCustomEnd('');
+    setBusFilter('all');
+    setDriverFilter('all');
+    setPaymentFilter('all');
+  };
 
   // Handle Edit initiation with safety check
   const handleEditClick = (booking: CharterBooking) => {
@@ -255,7 +290,7 @@ export const CharterBookings: React.FC = () => {
       }, 'Updated charter terms and schedule');
     } else {
       addCharterBooking({
-        bookingNumber: `SB-CH-${Math.floor(1030 + Math.random() * 90)}`,
+        bookingNumber: `DR-CH-${Math.floor(1030 + Math.random() * 90)}`,
         customerId: formData.customerId || `cust-new-${Date.now()}`,
         customerName: formData.customerName,
         phone: formData.phone,
@@ -345,24 +380,79 @@ export const CharterBookings: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters & Search */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search booking #, customer, city..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+      {/* Filters & Search Suite */}
+      <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2.5">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search booking #, customer, city..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+          </div>
+
+          {/* Date Filter & Clear */}
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+              <Calendar className="w-3.5 h-3.5 text-amber-600 ml-1 mr-1" />
+              <select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value as DateFilterOption)}
+                className="bg-transparent border-none text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer pr-2"
+              >
+                <option value="all">All Dates</option>
+                <option value="today">Today (02 Nov)</option>
+                <option value="thisWeek">This Week</option>
+                <option value="thisMonth">Nov 2026</option>
+                <option value="custom">Custom Range...</option>
+              </select>
+            </div>
+
+            {dateFilter === 'custom' && (
+              <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200 text-xs">
+                <input
+                  type="date"
+                  value={customStart}
+                  onChange={(e) => setCustomStart(e.target.value)}
+                  className="bg-transparent text-xs text-slate-800 focus:outline-none"
+                />
+                <span className="text-slate-400">to</span>
+                <input
+                  type="date"
+                  value={customEnd}
+                  onChange={(e) => setCustomEnd(e.target.value)}
+                  className="bg-transparent text-xs text-slate-800 focus:outline-none"
+                />
+              </div>
+            )}
+
+            {isAnyFilterActive && (
+              <button
+                onClick={handleResetFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition-colors border border-rose-200"
+                title="Reset all filters"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+        {/* Secondary Filter Row: Status, Type, Bus, Driver, Payment */}
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 text-xs">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+            <Filter className="w-3 h-3 text-amber-500" />
+            Filters:
+          </span>
+
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="text-xs py-1.5 px-3 rounded-xl border border-slate-200 bg-white font-medium focus:ring-2 focus:ring-amber-500"
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium focus:ring-2 focus:ring-amber-500"
           >
             <option value="all">All Statuses</option>
             <option value="Enquiry">Enquiry</option>
@@ -376,7 +466,7 @@ export const CharterBookings: React.FC = () => {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="text-xs py-1.5 px-3 rounded-xl border border-slate-200 bg-white font-medium focus:ring-2 focus:ring-amber-500"
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium focus:ring-2 focus:ring-amber-500"
           >
             <option value="all">All Booking Types</option>
             <option value="Shadi">Shadi (Wedding)</option>
@@ -386,6 +476,47 @@ export const CharterBookings: React.FC = () => {
             <option value="Tirth Yatra">Tirth Yatra</option>
             <option value="Government Work">Government Work</option>
           </select>
+
+          <select
+            value={busFilter}
+            onChange={(e) => setBusFilter(e.target.value)}
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium focus:ring-2 focus:ring-amber-500"
+          >
+            <option value="all">All Buses ({buses.length})</option>
+            {buses.map((bus) => (
+              <option key={bus.id} value={bus.id}>
+                {bus.plateNumber} ({bus.type})
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={driverFilter}
+            onChange={(e) => setDriverFilter(e.target.value)}
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium focus:ring-2 focus:ring-amber-500"
+          >
+            <option value="all">All Drivers</option>
+            {workers.filter(w => w.type === 'driver').map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={paymentFilter}
+            onChange={(e) => setPaymentFilter(e.target.value)}
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium focus:ring-2 focus:ring-amber-500"
+          >
+            <option value="all">All Payment States</option>
+            <option value="fullyPaid">Fully Paid (Balance ₹0)</option>
+            <option value="partial">Advance Paid (Balance Due)</option>
+            <option value="unpaid">Zero Advance Paid</option>
+          </select>
+
+          <div className="ml-auto text-[11px] text-slate-500 font-medium">
+            Showing <strong className="text-slate-900 font-bold">{filteredBookings.length}</strong> of {charterBookings.length} bookings
+          </div>
         </div>
       </div>
 

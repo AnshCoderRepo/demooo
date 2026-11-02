@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { RouteTicket, PassengerDetail } from '../types';
-import { formatINR, formatDate, exportToCSV, TODAY_STR, TOMORROW_STR } from '../utils/formatters';
+import { formatINR, formatDate, exportToCSV, TODAY_STR, TOMORROW_STR, isDateInFilter, DateFilterOption } from '../utils/formatters';
 import { 
   Ticket, Plus, Search, Filter, Download, User, Printer, 
   Share2, Ban, CheckCircle2, QrCode, FileText, X, AlertTriangle, 
-  MapPin, Eye, ArrowRight, ShieldCheck, Bus
+  MapPin, Eye, ArrowRight, ShieldCheck, Bus, RotateCcw, Calendar
 } from 'lucide-react';
 import { WarningModal } from '../components/modals/WarningModal';
 
@@ -27,6 +27,10 @@ export const RouteTickets: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [routeFilter, setRouteFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState<DateFilterOption>('all');
+  const [customStart, setCustomStart] = useState<string>('');
+  const [customEnd, setCustomEnd] = useState<string>('');
+  const [busFilter, setBusFilter] = useState<string>('all');
 
   // Cancel Ticket Confirmation modal state
   const [cancelModalTicket, setCancelModalTicket] = useState<RouteTicket | null>(null);
@@ -130,7 +134,7 @@ export const RouteTickets: React.FC = () => {
     });
 
     const newTicket = addRouteTicket({
-      ticketNumber: `SB-TK-${Math.floor(5100 + Math.random() * 800)}`,
+      ticketNumber: `DR-TK-${Math.floor(5100 + Math.random() * 800)}`,
       routeId: currentRoute.id,
       routeName: currentRoute.name,
       busId: assignedBus.id,
@@ -161,6 +165,23 @@ export const RouteTickets: React.FC = () => {
   };
 
   // Filtered Tickets
+  const isTicketFilterActive = 
+    searchQuery !== '' || 
+    routeFilter !== 'all' || 
+    statusFilter !== 'all' || 
+    dateFilter !== 'all' || 
+    busFilter !== 'all';
+
+  const handleResetTicketFilters = () => {
+    setSearchQuery('');
+    setRouteFilter('all');
+    setStatusFilter('all');
+    setDateFilter('all');
+    setCustomStart('');
+    setCustomEnd('');
+    setBusFilter('all');
+  };
+
   const filteredTickets = tickets.filter((t) => {
     const matchesSearch = 
       t.ticketNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -253,40 +274,111 @@ export const RouteTickets: React.FC = () => {
       {/* TAB 1: ISSUED TICKETS TABLE */}
       {activeTab === 'tickets' && (
         <div className="space-y-4">
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
-            <div className="relative w-full sm:w-80">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search ticket #, passenger, phone..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-              />
+          {/* Filters & Search Suite */}
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2.5">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5">
+              <div className="relative w-full sm:w-80">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search ticket #, passenger, phone..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              {/* Date Filter & Clear */}
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+                  <Calendar className="w-3.5 h-3.5 text-amber-600 ml-1 mr-1" />
+                  <select
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value as DateFilterOption)}
+                    className="bg-transparent border-none text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer pr-2"
+                  >
+                    <option value="all">All Travel Dates</option>
+                    <option value="today">Today (02 Nov)</option>
+                    <option value="tomorrow">Tomorrow (03 Nov)</option>
+                    <option value="thisWeek">This Week</option>
+                    <option value="thisMonth">Nov 2026</option>
+                    <option value="custom">Custom Range...</option>
+                  </select>
+                </div>
+
+                {dateFilter === 'custom' && (
+                  <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200 text-xs">
+                    <input
+                      type="date"
+                      value={customStart}
+                      onChange={(e) => setCustomStart(e.target.value)}
+                      className="bg-transparent text-xs text-slate-800 focus:outline-none"
+                    />
+                    <span className="text-slate-400">to</span>
+                    <input
+                      type="date"
+                      value={customEnd}
+                      onChange={(e) => setCustomEnd(e.target.value)}
+                      className="bg-transparent text-xs text-slate-800 focus:outline-none"
+                    />
+                  </div>
+                )}
+
+                {isTicketFilterActive && (
+                  <button
+                    onClick={handleResetTicketFilters}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition-colors border border-rose-200"
+                    title="Reset all filters"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Reset</span>
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* Secondary Filter Row */}
+            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 text-xs">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <Filter className="w-3 h-3 text-amber-500" />
+                Filters:
+              </span>
+
               <select
                 value={routeFilter}
                 onChange={(e) => setRouteFilter(e.target.value)}
-                className="text-xs py-1.5 px-3 rounded-xl border border-slate-200 bg-white font-medium"
+                className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium focus:ring-2 focus:ring-amber-500"
               >
-                <option value="all">All Routes</option>
+                <option value="all">All Routes ({routes.length})</option>
                 {routes.map((r) => (
                   <option key={r.id} value={r.id}>{r.name}</option>
                 ))}
               </select>
 
               <select
+                value={busFilter}
+                onChange={(e) => setBusFilter(e.target.value)}
+                className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium focus:ring-2 focus:ring-amber-500"
+              >
+                <option value="all">All Operating Buses ({buses.length})</option>
+                {buses.map((b) => (
+                  <option key={b.id} value={b.id}>{b.plateNumber} ({b.type})</option>
+                ))}
+              </select>
+
+              <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="text-xs py-1.5 px-3 rounded-xl border border-slate-200 bg-white font-medium"
+                className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium focus:ring-2 focus:ring-amber-500"
               >
-                <option value="all">All Statuses</option>
-                <option value="Confirmed">Confirmed</option>
-                <option value="Cancelled">Cancelled (Refunded)</option>
+                <option value="all">All Ticket Statuses</option>
+                <option value="Confirmed">Confirmed (Valid PNR)</option>
+                <option value="Cancelled">Cancelled (Refund & Credit Note)</option>
               </select>
+
+              <div className="ml-auto text-[11px] text-slate-500 font-medium">
+                Showing <strong className="text-slate-900 font-bold">{filteredTickets.length}</strong> of {tickets.length} tickets
+              </div>
             </div>
           </div>
 

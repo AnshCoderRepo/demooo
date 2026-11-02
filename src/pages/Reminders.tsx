@@ -5,7 +5,7 @@ import { formatDate } from '../utils/formatters';
 import { 
   BellRing, CheckCircle2, Clock, MessageSquare, Share2, 
   AlertTriangle, Filter, ShieldAlert, Truck, CreditCard, 
-  Users, BusFront, Calendar
+  Users, BusFront, Calendar, RotateCcw
 } from 'lucide-react';
 
 export const Reminders: React.FC = () => {
@@ -18,6 +18,16 @@ export const Reminders: React.FC = () => {
   } = useApp();
 
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'snoozed' | 'done'>('pending');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [channelFilter, setChannelFilter] = useState<string>('all');
+
+  const isReminderFilterActive = statusFilter !== 'pending' || typeFilter !== 'all' || channelFilter !== 'all';
+
+  const handleResetReminderFilters = () => {
+    setStatusFilter('pending');
+    setTypeFilter('all');
+    setChannelFilter('all');
+  };
 
   const filteredReminders = reminders.filter((r) => {
     if (statusFilter === 'all') return true;
@@ -68,40 +78,77 @@ export const Reminders: React.FC = () => {
           </p>
         </div>
 
-        {/* Filter */}
-        <div className="bg-slate-100 p-1 rounded-xl flex items-center text-xs font-bold">
-          <button
-            onClick={() => setStatusFilter('pending')}
-            className={`px-3 py-1.5 rounded-lg transition-colors ${
-              statusFilter === 'pending' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-900'
-            }`}
+        {/* Filter Controls */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="bg-slate-100 p-1 rounded-xl flex items-center text-xs font-bold">
+            <button
+              onClick={() => setStatusFilter('pending')}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${
+                statusFilter === 'pending' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              Pending
+            </button>
+            <button
+              onClick={() => setStatusFilter('snoozed')}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${
+                statusFilter === 'snoozed' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              Snoozed
+            </button>
+            <button
+              onClick={() => setStatusFilter('done')}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${
+                statusFilter === 'done' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              Resolved (Done)
+            </button>
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${
+                statusFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              All
+            </button>
+          </div>
+
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="text-xs py-1.5 px-3 rounded-xl border border-slate-200 bg-white font-medium"
           >
-            Pending
-          </button>
-          <button
-            onClick={() => setStatusFilter('snoozed')}
-            className={`px-3 py-1.5 rounded-lg transition-colors ${
-              statusFilter === 'snoozed' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
-            }`}
+            <option value="all">All Alert Categories</option>
+            <option value="document_expiry">RTO Document Expiry</option>
+            <option value="emi_due">Vehicle EMI Auto-Debit</option>
+            <option value="tomorrow_trip">Tomorrow's Trip Duty</option>
+            <option value="pending_payment">Customer Payment Overdue</option>
+            <option value="salary_day">Worker Salary Payout Day</option>
+          </select>
+
+          <select
+            value={channelFilter}
+            onChange={(e) => setChannelFilter(e.target.value)}
+            className="text-xs py-1.5 px-3 rounded-xl border border-slate-200 bg-white font-medium"
           >
-            Snoozed
-          </button>
-          <button
-            onClick={() => setStatusFilter('done')}
-            className={`px-3 py-1.5 rounded-lg transition-colors ${
-              statusFilter === 'done' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            Resolved (Done)
-          </button>
-          <button
-            onClick={() => setStatusFilter('all')}
-            className={`px-3 py-1.5 rounded-lg transition-colors ${
-              statusFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            All
-          </button>
+            <option value="all">All Delivery Channels</option>
+            <option value="SMS">SMS Dispatch</option>
+            <option value="WhatsApp">WhatsApp Alert</option>
+            <option value="in-app">In-App Notification</option>
+          </select>
+
+          {isReminderFilterActive && (
+            <button
+              onClick={handleResetReminderFilters}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition-colors border border-rose-200"
+              title="Reset reminder filters"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Reset</span>
+            </button>
+          )}
         </div>
       </div>
 

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { PaymentRecord } from '../types';
-import { formatINR, formatDate, exportToCSV, TODAY_STR } from '../utils/formatters';
+import { formatINR, formatDate, exportToCSV, TODAY_STR, isDateInFilter, DateFilterOption } from '../utils/formatters';
 import { 
   CreditCard, Plus, Search, Filter, Download, ArrowUpRight, 
-  ArrowDownLeft, Printer, CheckCircle2, History, X, User 
+  ArrowDownLeft, Printer, CheckCircle2, History, X, User, RotateCcw, Calendar 
 } from 'lucide-react';
 
 export const PaymentsLedger: React.FC = () => {
@@ -20,6 +20,10 @@ export const PaymentsLedger: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'credit' | 'debit'>('all');
   const [modeFilter, setModeFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<DateFilterOption>('all');
+  const [customStart, setCustomStart] = useState<string>('');
+  const [customEnd, setCustomEnd] = useState<string>('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [previewReceipt, setPreviewReceipt] = useState<PaymentRecord | null>(null);
@@ -37,6 +41,23 @@ export const PaymentsLedger: React.FC = () => {
     linkedType: 'charter' as 'charter' | 'ticket' | 'expense' | 'payroll' | 'general',
     notes: 'Advance installment received',
   });
+
+  const isPaymentFilterActive = 
+    searchQuery !== '' || 
+    typeFilter !== 'all' || 
+    modeFilter !== 'all' || 
+    dateFilter !== 'all' || 
+    categoryFilter !== 'all';
+
+  const handleResetPaymentFilters = () => {
+    setSearchQuery('');
+    setTypeFilter('all');
+    setModeFilter('all');
+    setDateFilter('all');
+    setCustomStart('');
+    setCustomEnd('');
+    setCategoryFilter('all');
+  };
 
   const filteredPayments = payments.filter((p) => {
     const matchesSearch = 
@@ -158,26 +179,79 @@ export const PaymentsLedger: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search receipt #, party, UTR..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+      {/* Filters & Search Suite */}
+      <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2.5">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search receipt #, party, UTR..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+              <Calendar className="w-3.5 h-3.5 text-emerald-600 ml-1 mr-1" />
+              <select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value as DateFilterOption)}
+                className="bg-transparent border-none text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer pr-2"
+              >
+                <option value="all">All Dates</option>
+                <option value="today">Today (02 Nov)</option>
+                <option value="thisWeek">This Week</option>
+                <option value="thisMonth">Nov 2026</option>
+                <option value="custom">Custom Range...</option>
+              </select>
+            </div>
+
+            {dateFilter === 'custom' && (
+              <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200 text-xs">
+                <input
+                  type="date"
+                  value={customStart}
+                  onChange={(e) => setCustomStart(e.target.value)}
+                  className="bg-transparent text-xs text-slate-800 focus:outline-none"
+                />
+                <span className="text-slate-400">to</span>
+                <input
+                  type="date"
+                  value={customEnd}
+                  onChange={(e) => setCustomEnd(e.target.value)}
+                  className="bg-transparent text-xs text-slate-800 focus:outline-none"
+                />
+              </div>
+            )}
+
+            {isPaymentFilterActive && (
+              <button
+                onClick={handleResetPaymentFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition-colors border border-rose-200"
+                title="Reset all filters"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 text-xs">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+            <Filter className="w-3 h-3 text-emerald-500" />
+            Filters:
+          </span>
+
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as any)}
-            className="text-xs py-1.5 px-3 rounded-xl border border-slate-200 bg-white font-medium"
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium"
           >
-            <option value="all">All Types</option>
+            <option value="all">All Flows (Credits & Debits)</option>
             <option value="credit">Credits (Money In)</option>
             <option value="debit">Debits (Money Out)</option>
           </select>
@@ -185,14 +259,32 @@ export const PaymentsLedger: React.FC = () => {
           <select
             value={modeFilter}
             onChange={(e) => setModeFilter(e.target.value)}
-            className="text-xs py-1.5 px-3 rounded-xl border border-slate-200 bg-white font-medium"
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium"
           >
-            <option value="all">All Modes</option>
-            <option value="UPI">UPI</option>
-            <option value="Bank">Bank Transfer</option>
-            <option value="Cash">Cash</option>
-            <option value="Card">Card</option>
+            <option value="all">All Payment Modes</option>
+            <option value="UPI">UPI (PhonePe, GPay, Paytm)</option>
+            <option value="Bank">Bank Transfer (NEFT/RTGS/IMPS)</option>
+            <option value="Cash">Cash Receipt</option>
+            <option value="Card">Debit / Credit Card</option>
           </select>
+
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium"
+          >
+            <option value="all">All Payment Categories</option>
+            <option value="Charter Advance">Charter Advance</option>
+            <option value="Charter Balance">Charter Balance</option>
+            <option value="Route Ticket">Route Ticket Sale</option>
+            <option value="Expense Payment">Fleet Operating Payment</option>
+            <option value="Salary Disbursed">Worker Salary Disbursement</option>
+            <option value="General">General Inflow/Outflow</option>
+          </select>
+
+          <div className="ml-auto text-[11px] text-slate-500 font-medium">
+            Showing <strong className="text-slate-900 font-bold">{filteredPayments.length}</strong> of {payments.length} transactions
+          </div>
         </div>
       </div>
 

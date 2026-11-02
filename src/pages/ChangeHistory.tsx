@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { formatDate, exportToCSV } from '../utils/formatters';
 import { 
   History, Search, Filter, Download, User, Clock, 
-  ArrowRight, ShieldCheck, ShieldAlert 
+  ArrowRight, ShieldCheck, ShieldAlert, RotateCcw 
 } from 'lucide-react';
 
 export const ChangeHistory: React.FC = () => {
@@ -11,6 +11,15 @@ export const ChangeHistory: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [actionFilter, setActionFilter] = useState('all');
+
+  const isHistoryFilterActive = searchQuery !== '' || typeFilter !== 'all' || actionFilter !== 'all';
+
+  const handleResetHistoryFilters = () => {
+    setSearchQuery('');
+    setTypeFilter('all');
+    setActionFilter('all');
+  };
 
   const filteredHistory = changeHistory.filter((h) => {
     const matchesSearch = 
@@ -66,35 +75,71 @@ export const ChangeHistory: React.FC = () => {
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search record, operator, field..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+      {/* Filters & Search Suite */}
+      <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2.5">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search record, operator, field..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {isHistoryFilterActive && (
+              <button
+                onClick={handleResetHistoryFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition-colors border border-rose-200"
+                title="Reset audit filters"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset</span>
+              </button>
+            )}
+            <div className="text-[11px] text-slate-500 font-medium">
+              Showing <strong className="text-slate-900 font-bold">{filteredHistory.length}</strong> of {changeHistory.length} audit entries
+            </div>
+          </div>
         </div>
 
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="text-xs py-1.5 px-3 rounded-xl border border-slate-200 bg-white font-medium"
-        >
-          <option value="all">All Modules</option>
-          <option value="Charter Booking">Charter Bookings</option>
-          <option value="Route Ticket">Route Tickets</option>
-          <option value="Bus">Fleet Buses</option>
-          <option value="Worker">Workers & Payroll</option>
-          <option value="Customer">Customers</option>
-          <option value="Expense">Expenses</option>
-          <option value="Payment">Payments & Ledger</option>
-          <option value="GST Invoice">GST Invoices</option>
-          <option value="Settings">System Settings</option>
-        </select>
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 text-xs">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+            <Filter className="w-3 h-3 text-amber-500" />
+            Filters:
+          </span>
+
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium"
+          >
+            <option value="all">All Modules</option>
+            <option value="Charter Booking">Charter Bookings</option>
+            <option value="Route Ticket">Route Tickets</option>
+            <option value="Bus">Fleet Buses</option>
+            <option value="Worker">Workers & Payroll</option>
+            <option value="Customer">Customers</option>
+            <option value="Expense">Expenses</option>
+            <option value="Payment">Payments & Ledger</option>
+            <option value="GST Invoice">GST Invoices</option>
+            <option value="Settings">System Settings</option>
+          </select>
+
+          <select
+            value={actionFilter}
+            onChange={(e) => setActionFilter(e.target.value)}
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium"
+          >
+            <option value="all">All Actions</option>
+            <option value="Created">Created Record</option>
+            <option value="Edited">Edited / Field Update</option>
+            <option value="Credit Note Issued">Credit Note Issued</option>
+          </select>
+        </div>
       </div>
 
       {/* History Table */}

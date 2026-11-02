@@ -5,7 +5,7 @@ import { formatINR, formatDate, exportToCSV } from '../utils/formatters';
 import { 
   UserCheck, Plus, Search, Filter, Download, Calendar, 
   CreditCard, Printer, Share2, History, CheckCircle2, 
-  X, AlertCircle, ArrowRight, User, DollarSign, Wallet
+  X, AlertCircle, ArrowRight, User, DollarSign, Wallet, RotateCcw
 } from 'lucide-react';
 
 export const WorkersSalary: React.FC = () => {
@@ -25,6 +25,7 @@ export const WorkersSalary: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'workers' | 'attendance' | 'payroll' | 'advances'>('payroll');
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [advanceFilter, setAdvanceFilter] = useState<'all' | 'hasAdvance' | 'noAdvance'>('all');
 
   // Advance modal state
   const [isAdvanceModalOpen, setIsAdvanceModalOpen] = useState(false);
@@ -41,6 +42,14 @@ export const WorkersSalary: React.FC = () => {
     allowance: number;
     advanceDeduction: number;
   }>>({});
+
+  const isWorkerFilterActive = searchQuery !== '' || typeFilter !== 'all' || advanceFilter !== 'all';
+
+  const handleResetWorkerFilters = () => {
+    setSearchQuery('');
+    setTypeFilter('all');
+    setAdvanceFilter('all');
+  };
 
   const filteredWorkers = workers.filter((w) => {
     const matchesSearch = 
@@ -214,6 +223,68 @@ export const WorkersSalary: React.FC = () => {
             <Download className="w-4 h-4 text-slate-500" />
             <span>Export CSV</span>
           </button>
+        </div>
+      </div>
+
+      {/* Filters & Search Suite */}
+      <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2.5">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search worker name, licence #, phone..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {isWorkerFilterActive && (
+              <button
+                onClick={handleResetWorkerFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition-colors border border-rose-200"
+                title="Reset worker filters"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset</span>
+              </button>
+            )}
+            <div className="text-[11px] text-slate-500 font-medium">
+              Showing <strong className="text-slate-900 font-bold">{filteredWorkers.length}</strong> of {workers.length} crew members
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 text-xs">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+            <Filter className="w-3 h-3 text-amber-500" />
+            Filters:
+          </span>
+
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium"
+          >
+            <option value="all">All Worker Roles (Crew & Staff)</option>
+            <option value="driver">Heavy Vehicle Drivers (Commercial HMV)</option>
+            <option value="conductor">Conductors / Crew Managers</option>
+            <option value="helper">Trip Helpers & Cleaners</option>
+            <option value="office">Office Booking Staff & Accounts</option>
+            <option value="mechanic">Workshop Mechanics & Maintenance</option>
+          </select>
+
+          <select
+            value={advanceFilter}
+            onChange={(e) => setAdvanceFilter(e.target.value as any)}
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium"
+          >
+            <option value="all">All Advance States</option>
+            <option value="hasAdvance">Has Active Advance / Loan Balance</option>
+            <option value="noAdvance">Zero Outstanding Advances</option>
+          </select>
         </div>
       </div>
 

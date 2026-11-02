@@ -4,7 +4,7 @@ import { Bus, BusDocument, BusStatus } from '../types';
 import { formatDate, formatINR, exportToCSV } from '../utils/formatters';
 import { 
   Truck, Search, Plus, Download, Edit, ShieldAlert, 
-  CheckCircle2, Clock, Wrench, AlertTriangle, Eye, History, X 
+  CheckCircle2, Clock, Wrench, AlertTriangle, Eye, History, X, Filter, RotateCcw 
 } from 'lucide-react';
 
 export const Fleet: React.FC = () => {
@@ -12,6 +12,8 @@ export const Fleet: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [busTypeFilter, setBusTypeFilter] = useState<string>('all');
+  const [complianceFilter, setComplianceFilter] = useState<'all' | 'expired' | 'expiring' | 'valid'>('all');
   const [selectedBus, setSelectedBus] = useState<Bus | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBus, setEditingBus] = useState<Bus | null>(null);
@@ -19,6 +21,19 @@ export const Fleet: React.FC = () => {
   const [editStatus, setEditStatus] = useState<BusStatus>('Available');
   const [editOdometer, setEditOdometer] = useState<number>(140000);
   const [editNextService, setEditNextService] = useState<string>('2026-11-20');
+
+  const isFleetFilterActive = 
+    searchQuery !== '' || 
+    statusFilter !== 'all' || 
+    busTypeFilter !== 'all' || 
+    complianceFilter !== 'all';
+
+  const handleResetFleetFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setBusTypeFilter('all');
+    setComplianceFilter('all');
+  };
 
   const filteredBuses = buses.filter((b) => {
     const matchesSearch = 
@@ -110,29 +125,76 @@ export const Fleet: React.FC = () => {
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search plate #, model, sleeper/seater..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+      {/* Filters & Search Suite */}
+      <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2.5">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search registration, model, chassis..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {isFleetFilterActive && (
+              <button
+                onClick={handleResetFleetFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition-colors border border-rose-200"
+                title="Reset fleet filters"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset</span>
+              </button>
+            )}
+            <div className="text-[11px] text-slate-500 font-medium">
+              Showing <strong className="text-slate-900 font-bold">{filteredBuses.length}</strong> of {buses.length} buses
+            </div>
+          </div>
         </div>
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="text-xs py-1.5 px-3 rounded-xl border border-slate-200 bg-white font-medium"
-        >
-          <option value="all">All Fleet Statuses</option>
-          <option value="Available">Available for Dispatch</option>
-          <option value="On trip">On Road (Active Trip)</option>
-          <option value="In maintenance">In Maintenance / Workshop</option>
-        </select>
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 text-xs">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+            <Filter className="w-3 h-3 text-amber-500" />
+            Filters:
+          </span>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium"
+          >
+            <option value="all">All Operating Statuses</option>
+            <option value="Available">Available (In Depot Yard)</option>
+            <option value="On trip">On Road (Active Trip)</option>
+            <option value="In maintenance">In Maintenance / Workshop</option>
+          </select>
+
+          <select
+            value={busTypeFilter}
+            onChange={(e) => setBusTypeFilter(e.target.value)}
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium"
+          >
+            <option value="all">All Bus Configurations</option>
+            <option value="AC Sleeper">AC Sleeper 2+1</option>
+            <option value="Non-AC Seater">Non-AC Seater 2+2</option>
+            <option value="Mini Bus">Mini Bus</option>
+          </select>
+
+          <select
+            value={complianceFilter}
+            onChange={(e) => setComplianceFilter(e.target.value as any)}
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium"
+          >
+            <option value="all">All Compliance Statuses</option>
+            <option value="expired">Has Expired Documents (Red Chip)</option>
+            <option value="expiring">Expiring within 7 Days (Amber Chip)</option>
+            <option value="valid">All Certificates Valid (Green)</option>
+          </select>
+        </div>
       </div>
 
       {/* Fleet Cards Grid */}

@@ -4,7 +4,7 @@ import { SmsTemplate, SmsLog } from '../types';
 import { formatDate } from '../utils/formatters';
 import { 
   MessageSquare, CheckCircle2, ShieldCheck, Send, 
-  Search, Eye, Edit, Sparkles, Smartphone, Download 
+  Search, Eye, Edit, Sparkles, Smartphone, Download, RotateCcw, Filter 
 } from 'lucide-react';
 
 export const SmsAlerts: React.FC = () => {
@@ -13,12 +13,15 @@ export const SmsAlerts: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'logs' | 'templates'>('logs');
   const [selectedTemplate, setSelectedTemplate] = useState<SmsTemplate>(smsTemplates[0]);
   const [templateBody, setTemplateBody] = useState<string>(smsTemplates[0]?.body || '');
+  const [logSearchQuery, setLogSearchQuery] = useState('');
+  const [logStatusFilter, setLogStatusFilter] = useState('all');
+  const [logTemplateFilter, setLogTemplateFilter] = useState('all');
 
   // Live variable preview replacement
   const getRenderedPreview = (body: string) => {
     return body
       .replace(/{customer_name}/g, 'Rajesh Verma')
-      .replace(/{booking_number}/g, 'SB-CH-1021')
+      .replace(/{booking_number}/g, 'DR-CH-1021')
       .replace(/{booking_type}/g, 'Shadi')
       .replace(/{date}/g, '05 Nov 2026')
       .replace(/{bus_number}/g, 'DL 01 AB 4090')
@@ -26,7 +29,7 @@ export const SmsAlerts: React.FC = () => {
       .replace(/{driver_phone}/g, '+91 98711 22334')
       .replace(/{advance_paid}/g, '₹25,000')
       .replace(/{balance_due}/g, '₹40,625')
-      .replace(/{ticket_number}/g, 'SB-TK-5085')
+      .replace(/{ticket_number}/g, 'DR-TK-5085')
       .replace(/{route_name}/g, 'Delhi ↔ Siliguri')
       .replace(/{travel_date}/g, '02 Nov 2026')
       .replace(/{departure_time}/g, '17:30')
@@ -42,6 +45,24 @@ export const SmsAlerts: React.FC = () => {
       .replace(/{trip_type}/g, 'Shadi')
       .replace(/{report_time}/g, '13:00')
       .replace(/{pickup_location}/g, 'Karol Bagh');
+  };
+
+  const filteredSmsLogs = smsLogs.filter((log) => {
+    const matchesSearch = 
+      log.recipientName.toLowerCase().includes(logSearchQuery.toLowerCase()) ||
+      log.recipientPhone.includes(logSearchQuery) ||
+      log.message.toLowerCase().includes(logSearchQuery.toLowerCase());
+    const matchesStatus = logStatusFilter === 'all' || log.status === logStatusFilter;
+    const matchesTemplate = logTemplateFilter === 'all' || log.templateName === logTemplateFilter;
+    return matchesSearch && matchesStatus && matchesTemplate;
+  });
+
+  const isSmsFilterActive = logSearchQuery !== '' || logStatusFilter !== 'all' || logTemplateFilter !== 'all';
+
+  const handleResetSmsFilters = () => {
+    setLogSearchQuery('');
+    setLogStatusFilter('all');
+    setLogTemplateFilter('all');
   };
 
   const handleSelectTemplate = (tpl: SmsTemplate) => {
@@ -156,7 +177,7 @@ export const SmsAlerts: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
-                {smsLogs.map((log) => (
+                {filteredSmsLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-slate-50/80">
                     <td className="p-3.5 align-top text-slate-500 font-mono text-[11px]">
                       {log.sentAt}

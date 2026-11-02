@@ -96,6 +96,36 @@ export function checkDateOverlap(startA: string, endA: string, startB: string, e
   return Math.max(sA, sB) <= Math.min(eA, eB);
 }
 
+export type DateFilterOption = 'all' | 'today' | 'thisWeek' | 'thisMonth' | 'custom';
+
+/**
+ * Filter date helper supporting today, thisWeek, thisMonth, custom
+ */
+export function isDateInFilter(
+  dateInput: string | undefined | null,
+  filter: DateFilterOption | string,
+  customStart?: string,
+  customEnd?: string
+): boolean {
+  if (!dateInput) return false;
+  if (filter === 'all') return true;
+  const dateStr = dateInput.slice(0, 10);
+  if (filter === 'today') return dateStr === TODAY_STR;
+  if (filter === 'tomorrow') return dateStr === TOMORROW_STR;
+  if (filter === 'thisWeek') {
+    return dateStr >= '2026-11-01' && dateStr <= '2026-11-07';
+  }
+  if (filter === 'thisMonth') {
+    return dateStr.startsWith('2026-11');
+  }
+  if (filter === 'custom') {
+    if (customStart && dateStr < customStart) return false;
+    if (customEnd && dateStr > customEnd) return false;
+    return true;
+  }
+  return true;
+}
+
 /**
  * Indian States for GST resolution
  */

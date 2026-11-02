@@ -15,7 +15,7 @@ import {
 import { TRANSLATIONS } from '../utils/formatters';
 import confetti from 'canvas-confetti';
 
-const STORAGE_KEY = 'DEEPAK_RAJ_BUS_ADMIN_DATA_V2';
+const STORAGE_KEY = 'DEEPAK_RAJ_BUS_ADMIN_DATA_V3';
 
 export interface ToastMessage {
   id: string;
@@ -45,7 +45,7 @@ export const GUIDED_TOUR_STEPS: GuidedStep[] = [
     title: '2. Charter Booking with Double-Booking Block',
     description: 'Create and quote a Shadi charter. Watch the intelligent conflict detector prevent double-booking on already committed buses (DL 01 AB 4090).',
     path: '/charter-bookings',
-    highlightAction: 'Click "New Booking" or check booking #SB-CH-1021 status flow',
+    highlightAction: 'Click "New Booking" or check booking #DR-CH-1021 status flow',
   },
   {
     step: 3,
@@ -66,7 +66,7 @@ export const GUIDED_TOUR_STEPS: GuidedStep[] = [
     title: '5. Cancellation Engine & Auto Credit Note',
     description: 'Passenger requests cancellation? The engine applies time-tiered refund rules (90%/50%/0%) and auto-issues a GST Credit Note.',
     path: '/route-tickets',
-    highlightAction: 'Click Cancel on ticket #SB-TK-5084 or view its Credit Note',
+    highlightAction: 'Click Cancel on ticket #DR-TK-5084 or view its Credit Note',
   },
   {
     step: 6,
@@ -430,7 +430,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Auto add Payment
     const paymentRec: PaymentRecord = {
       id: `pay-${Date.now()}`,
-      receiptNumber: `SB-REC-${Math.floor(1000 + Math.random() * 9000)}`,
+      receiptNumber: `DR-REC-${Math.floor(1000 + Math.random() * 9000)}`,
       date: '2026-11-02',
       amount: newTicket.grandTotal,
       type: 'credit',
@@ -475,7 +475,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const refundPercent = 90;
     const refundAmount = Math.round(ticket.grandTotal * (refundPercent / 100));
     const cancellationCharge = ticket.grandTotal - refundAmount;
-    const creditNoteNum = `SB-CR-2026-${Math.floor(100 + Math.random() * 900)}`;
+    const creditNoteNum = `DR-CR-2026-${Math.floor(100 + Math.random() * 900)}`;
 
     const cancellationDetails = {
       cancelledAt: '2026-11-02 21:55',
@@ -571,7 +571,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newPay: PaymentRecord = {
       ...paymentData,
       id: `pay-${Date.now()}`,
-      receiptNumber: `SB-REC-${Math.floor(1000 + Math.random() * 9000)}`,
+      receiptNumber: `DR-REC-${Math.floor(1000 + Math.random() * 9000)}`,
     };
 
     setData((prev: any) => {
