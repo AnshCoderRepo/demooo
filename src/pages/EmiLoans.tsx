@@ -4,7 +4,7 @@ import { LoanEMI } from '../types';
 import { formatINR, formatDate, exportToCSV } from '../utils/formatters';
 import { 
   Landmark, AlertTriangle, CheckCircle2, Clock, 
-  CreditCard, Download, History, X, Bus, Plus 
+  CreditCard, Download, History, X, Bus, Plus, Search, Filter, RotateCcw 
 } from 'lucide-react';
 
 export const EmiLoans: React.FC = () => {
@@ -13,6 +13,10 @@ export const EmiLoans: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'loans' | 'purchaseRecords'>('loans');
   const [payModalEmi, setPayModalEmi] = useState<LoanEMI | null>(null);
   const [payReference, setPayReference] = useState('ACH/SBI/20261102/DPKRAJ');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [financierFilter, setFinancierFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [urgencyFilter, setUrgencyFilter] = useState('all');
 
   // Find EMIs due within 5 days (5 Nov is in 3 days!)
   const emiDueSoon = emis.filter((e) => e.status === 'active' && e.dueDayOfMonth >= 1 && e.dueDayOfMonth <= 7);
@@ -21,6 +25,34 @@ export const EmiLoans: React.FC = () => {
     if (!payModalEmi) return;
     markEmiPaid(payModalEmi.id, payReference);
     setPayModalEmi(null);
+  };
+
+
+  // Filtered EMIs
+  const filteredEmis = emis.filter((e) => {
+    const matchesSearch = 
+      e.busNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      e.financeCompany.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFinancier = financierFilter === 'all' || e.financeCompany === financierFilter;
+    const matchesStatus = statusFilter === 'all' || e.status === statusFilter;
+    const matchesUrgency = 
+      urgencyFilter === 'all' ? true :
+      urgencyFilter === 'dueSoon' ? (e.status === 'active' && e.dueDayOfMonth <= 7) :
+      (e.status === 'active' && e.dueDayOfMonth > 7);
+    return matchesSearch && matchesFinancier && matchesStatus && matchesUrgency;
+  });
+
+  const isEmiFilterActive = 
+    searchQuery !== '' || 
+    financierFilter !== 'all' || 
+    statusFilter !== 'all' || 
+    urgencyFilter !== 'all';
+
+  const handleResetEmiFilters = () => {
+    setSearchQuery('');
+    setFinancierFilter('all');
+    setStatusFilter('all');
+    setUrgencyFilter('all');
   };
 
   const handleExportCSV = () => {
@@ -113,10 +145,80 @@ export const EmiLoans: React.FC = () => {
         </div>
       )}
 
+      {/* Filters & Search Suite */}
+      <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2.5">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search bus plate #, financier (Tata Capital, HDFC)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {isEmiFilterActive && (
+              <button
+                onClick={handleResetEmiFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition-colors border border-rose-200"
+                title="Reset EMI filters"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset</span>
+              </button>
+            )}
+            <div className="text-[11px] text-slate-500 font-medium">
+              Showing <strong className="text-slate-900 font-bold">{filteredEmis.length}</strong> of {emis.length} loans
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 text-xs">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+            <Filter className="w-3 h-3 text-purple-500" />
+            Filters:
+          </span>
+
+          <select
+            value={financierFilter}
+            onChange={(e) => setFinancierFilter(e.target.value)}
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium"
+          >
+            <option value="all">All Finance Companies</option>
+            <option value="Tata Capital Commercial Vehicle Finance">Tata Capital</option>
+            <option value="HDFC Bank Commercial Transport">HDFC Bank</option>
+            <option value="Cholamandalam Vehicle Finance">Cholamandalam</option>
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium"
+          >
+            <option value="all">All Loan Statuses</option>
+            <option value="active">Active Running Loans</option>
+            <option value="closed">Closed / Fully Repaid (NOC)</option>
+          </select>
+
+          <select
+            value={urgencyFilter}
+            onChange={(e) => setUrgencyFilter(e.target.value)}
+            className="text-xs py-1 px-2.5 rounded-lg border border-slate-200 bg-white font-medium"
+          >
+            <option value="all">All Due Timelines</option>
+            <option value="dueSoon">Upcoming Auto-Debit (Due in ≤5 Days)</option>
+            <option value="dueLater">Due Later This Month</option>
+          </select>
+        </div>
+      </div>
+
       {/* TAB 1: ACTIVE LOANS */}
       {activeTab === 'loans' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {emis.map((emi) => {
+          {filteredEmis.map((emi) => {
             const completedMonths = emi.tenureMonths - emi.remainingInstalments;
             const progressPercent = Math.round((completedMonths / emi.tenureMonths) * 100);
 
